@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff - Atiq Payroll</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2>Atiq Payroll</h2>
+        <nav>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="staff.html" class="active">Staff Management</a>
+            <a href="upload.html">Upload Excel</a>
+            <a href="salary.html">Salary Slips</a>
+        </nav>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <h1>Staff Management</h1>
+            <button class="btn" style="width: auto;" onclick="openModal()">+ Add Staff</button>
+        </header>
+
+        <div class="page-container">
+            <div class="card">
+                <table id="staffTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Basic</th>
+                            <th>Net Salary</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal -->
+    <div id="staffModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add Staff</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="staffForm">
+                <input type="hidden" id="staffId">
+                <div class="form-group"><label>Name</label><input type="text" id="name" required></div>
+                <div class="form-group"><label>Department</label><input type="text" id="department" required></div>
+                <div class="form-group"><label>Basic Salary</label><input type="number" id="basic" required></div>
+                <div class="form-group"><label>HRA</label><input type="number" id="hra" value="0"></div>
+                <div class="form-group"><label>DA</label><input type="number" id="da" value="0"></div>
+                <div class="form-group"><label>Allowance</label><input type="number" id="allowance" value="0"></div>
+                <div class="form-group"><label>PF</label><input type="number" id="pf" value="0"></div>
+                <div class="form-group"><label>Tax</label><input type="number" id="tax" value="0"></div>
+                <button type="submit" class="btn">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        function logout() { localStorage.removeItem('token'); window.location.href = '/login.html'; }
+
+        async function loadStaff() {
+            const res = await fetch('/api/staff', { headers: { 'Authorization': `Bearer ${token}` } });
+            const staff = await res.json();
+            const tbody = document.querySelector('#staffTable tbody');
+            tbody.innerHTML = staff.map(s => `
+                <tr>
+                    <td>${s.name}</td>
+                    <td>${s.department}</td>
+                    <td>$${s.basic.toLocaleString()}</td>
+                    <td>$${s.net.toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px; width: auto;" onclick='editStaff(${JSON.stringify(s)})'>Edit</button>
+                        <button class="btn btn-danger" style="padding: 4px 8px; font-size: 12px; width: auto;" onclick="deleteStaff(${s.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openModal() {
+            document.getElementById('staffForm').reset();
+            document.getElementById('staffId').value = '';
+            document.getElementById('modalTitle').innerText = 'Add Staff';
+            document.getElementById('staffModal').classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('staffModal').classList.remove('active'); }
+
+        function editStaff(staff) {
+            document.getElementById('staffId').value = staff.id;
+            document.getElementById('name').value = staff.name;
+            document.getElementById('department').value = staff.department;
+            document.getElementById('basic').value = staff.basic;
+            document.getElementById('hra').value = staff.hra;
+            document.getElementById('da').value = staff.da;
+            document.getElementById('allowance').value = staff.allowance;
+            document.getElementById('pf').value = staff.pf;
+            document.getElementById('tax').value = staff.tax;
+            document.getElementById('modalTitle').innerText = 'Edit Staff';
+            document.getElementById('staffModal').classList.add('active');
+        }
+
+        document.getElementById('staffForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('staffId').value;
+            const data = {
+                name: document.getElementById('name').value,
+                department: document.getElementById('department').value,
+                basic: document.getElementById('basic').value,
+                hra: document.getElementById('hra').value,
+                da: document.getElementById('da').value,
+                allowance: document.getElementById('allowance').value,
+                pf: document.getElementById('pf').value,
+                tax: document.getElementById('tax').value
+            };
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `/api/staff/${id}` : '/api/staff';
+
+            await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(data)
+            });
+
+            closeModal();
+            loadStaff();
+        });
+
+        async function deleteStaff(id) {
+            if(confirm('Are you sure?')) {
+                await fetch(`/api/staff/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }});
+                loadStaff();
+            }
+        }
+
+        loadStaff();
+    </script>
+</body>
+</html>

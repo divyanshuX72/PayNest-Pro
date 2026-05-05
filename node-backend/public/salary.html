@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Slips - Atiq Payroll</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2>Atiq Payroll</h2>
+        <nav>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="staff.html">Staff Management</a>
+            <a href="upload.html">Upload Excel</a>
+            <a href="salary.html" class="active">Salary Slips</a>
+        </nav>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <h1>Salary Slips</h1>
+        </header>
+
+        <div class="page-container">
+            <div class="card">
+                <table id="salaryTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Gross</th>
+                            <th>Net</th>
+                            <th>Download</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        function logout() { localStorage.removeItem('token'); window.location.href = '/login.html'; }
+
+        async function loadSalaryData() {
+            const res = await fetch('/api/staff', { headers: { 'Authorization': `Bearer ${token}` } });
+            const staff = await res.json();
+            const tbody = document.querySelector('#salaryTable tbody');
+            tbody.innerHTML = staff.map(s => `
+                <tr>
+                    <td>${s.name}</td>
+                    <td>${s.department}</td>
+                    <td>$${s.gross.toLocaleString()}</td>
+                    <td><strong>$${s.net.toLocaleString()}</strong></td>
+                    <td>
+                        <button class="btn btn-success" style="padding: 4px 12px; font-size: 12px; width: auto;" onclick="downloadPDF(${s.id})">Download PDF</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function downloadPDF(id) {
+            try {
+                const res = await fetch(`/api/pdf/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!res.ok) throw new Error('Failed to generate PDF');
+
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                // Get filename from header or fallback
+                const disposition = res.headers.get('Content-Disposition');
+                let filename = 'salary_slip.pdf';
+                if (disposition && disposition.includes('filename=')) {
+                    filename = disposition.split('filename=')[1];
+                }
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        loadSalaryData();
+    </script>
+</body>
+</html>

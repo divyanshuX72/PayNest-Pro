@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Atiq Payroll</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2>Atiq Payroll</h2>
+        <nav>
+            <a href="dashboard.html" class="active">Dashboard</a>
+            <a href="staff.html">Staff Management</a>
+            <a href="upload.html">Upload Excel</a>
+            <a href="salary.html">Salary Slips</a>
+        </nav>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <h1>Dashboard</h1>
+        </header>
+
+        <div class="page-container">
+            <div class="dashboard-grid card">
+                <div class="stat-card">
+                    <h3>Total Staff</h3>
+                    <div class="value" id="totalStaff">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Salary Payout</h3>
+                    <div class="value" id="totalPayout">$0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Departments</h3>
+                    <div class="value" id="totalDeps">0</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Salary Overview</h3>
+                <canvas id="salaryChart" style="max-height: 400px; margin-top: 20px;"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Check Auth
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+        }
+
+        async function loadDashboard() {
+            try {
+                const res = await fetch('/api/staff/dashboard', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if(res.ok) {
+                    document.getElementById('totalStaff').innerText = data.totalStaff;
+                    document.getElementById('totalPayout').innerText = '$' + (data.totalPayout || 0).toLocaleString();
+                    document.getElementById('totalDeps').innerText = data.totalDepartments;
+
+                    // Fake chart data for UI
+                    const ctx = document.getElementById('salaryChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Basic', 'HRA', 'DA', 'Allowance', 'PF', 'Tax'],
+                            datasets: [{
+                                label: 'Average Split',
+                                data: [5000, 1500, 1000, 500, 300, 200],
+                                backgroundColor: 'rgba(37, 99, 235, 0.5)',
+                                borderColor: 'rgba(37, 99, 235, 1)',
+                                borderWidth: 1
+                            }]
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>

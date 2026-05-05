@@ -1,0 +1,13 @@
+[Tue May  5 22:21:06 2026] PHP 8.0.30 Development Server (http://127.0.0.1:8000) started
+[Tue May  5 22:21:16 2026] 127.0.0.1:61158 Accepted
+[Tue May  5 22:21:16 2026] 127.0.0.1:61158 [200]: GET /dashboard.php
+[Tue May  5 22:21:16 2026] 127.0.0.1:61158 Closing
+[Tue May  5 22:21:30 2026] 127.0.0.1:53869 Accepted
+[Tue May  5 22:21:30 2026] 127.0.0.1:55756 Accepted
+[Tue May  5 22:21:30 2026] 127.0.0.1:53869 [200]: GET /dashboard.php
+[Tue May  5 22:21:30 2026] 127.0.0.1:53869 Closing
+[Tue May  5 22:21:30 2026] 127.0.0.1:55756 [200]: GET /style.css
+[Tue May  5 22:21:30 2026] 127.0.0.1:55756 Closing
+[Tue May  5 22:21:30 2026] 127.0.0.1:60787 Accepted
+[Tue May  5 22:21:30 2026] 127.0.0.1:60787 [404]: GET /favicon.ico - No such file or directory
+[Tue May  5 22:21:30 2026] 127.0.0.1:60787 Closing

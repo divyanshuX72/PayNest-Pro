@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload - Atiq Payroll</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2>Atiq Payroll</h2>
+        <nav>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="staff.html">Staff Management</a>
+            <a href="upload.html" class="active">Upload Excel</a>
+            <a href="salary.html">Salary Slips</a>
+        </nav>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <h1>Upload Excel Data</h1>
+        </header>
+
+        <div class="page-container">
+            <div class="card" style="max-width: 500px;">
+                <h3>Bulk Staff Upload</h3>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.875rem;">
+                    Upload an Excel file with columns: Name, Department, Basic, HRA, DA, Allowance, PF, Tax.
+                </p>
+                <form id="uploadForm">
+                    <div class="form-group">
+                        <input type="file" id="excelFile" accept=".xlsx, .xls" required>
+                    </div>
+                    <button type="submit" class="btn">Upload</button>
+                </form>
+                <div id="uploadMsg" style="margin-top: 1rem; font-weight: 500;"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        function logout() { localStorage.removeItem('token'); window.location.href = '/login.html'; }
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msgEl = document.getElementById('uploadMsg');
+            msgEl.innerText = 'Uploading...';
+            msgEl.style.color = 'var(--text-main)';
+
+            const file = document.getElementById('excelFile').files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                
+                const data = await res.json();
+                if(res.ok) {
+                    msgEl.innerText = data.message;
+                    msgEl.style.color = 'var(--success)';
+                } else {
+                    msgEl.innerText = data.error || 'Upload failed';
+                    msgEl.style.color = 'var(--danger)';
+                }
+            } catch (err) {
+                msgEl.innerText = 'Network error';
+                msgEl.style.color = 'var(--danger)';
+            }
+        });
+    </script>
+</body>
+</html>
