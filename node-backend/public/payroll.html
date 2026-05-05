@@ -22,42 +22,39 @@
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius);
-            padding: 1.1rem 1.25rem;
+            padding: 1rem 1.1rem;
             display: flex;
             flex-direction: column;
             gap: .3rem;
+            min-width: 0;          /* allow flex shrink */
+            overflow: hidden;
         }
 
         .pstat-label {
-            font-size: .72rem;
+            font-size: .68rem;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: .06em;
             font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .pstat-value {
-            font-size: 1.6rem;
+            font-size: clamp(.9rem, 1.3vw, 1.35rem);  /* scales down when space is tight */
             font-weight: 700;
             color: var(--text-bright);
-            line-height: 1.1;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .pstat-value.green {
-            color: var(--success);
-        }
-
-        .pstat-value.red {
-            color: var(--danger);
-        }
-
-        .pstat-value.blue {
-            color: var(--primary);
-        }
-
-        .pstat-value.yellow {
-            color: var(--warning);
-        }
+        .pstat-value.green  { color: var(--success); }
+        .pstat-value.red    { color: var(--danger);  }
+        .pstat-value.blue   { color: var(--primary); }
+        .pstat-value.yellow { color: var(--warning); }
 
         /* ── Toolbar ── */
         .payroll-toolbar {
@@ -74,19 +71,47 @@
             max-width: 340px;
         }
 
+        /* ── Select wrapper ── */
+        .filter-select-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .filter-select-wrap::after {
+            content: '';
+            position: absolute;
+            right: .75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 5px solid var(--text-muted);
+            pointer-events: none;
+            flex-shrink: 0;
+        }
+
         .filter-select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
             background: var(--glass-bg);
             color: var(--text-main);
             border: 1px solid var(--border);
-            padding: .55rem 2.2rem .55rem .85rem;
-            /* Added extra right padding for arrow */
+            padding: .55rem 2rem .55rem .85rem;   /* right gap for the chevron */
             border-radius: 8px;
             font-size: .85rem;
             font-family: inherit;
             outline: none;
             cursor: pointer;
             transition: border-color .2s;
-            min-width: 140px;
+            min-width: 130px;
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .filter-select:focus {
@@ -293,30 +318,35 @@
                     <input type="text" id="searchInput" placeholder="Search by name, dept, ID..."
                         oninput="applyFilters()">
                 </div>
-                <select class="filter-select" id="statusFilter" onchange="applyFilters()">
-                    <option value="">All Status</option>
-                    <option value="pending">⏳ Pending</option>
-                    <option value="paid">✅ Paid</option>
-                </select>
-                <select class="filter-select" id="monthFilter" onchange="applyFilters()">
-                    <option value="">All Months</option>
-                    <option>Jan</option>
-                    <option>Feb</option>
-                    <option>Mar</option>
-                    <option>Apr</option>
-                    <option>May</option>
-                    <option>Jun</option>
-                    <option>Jul</option>
-                    <option>Aug</option>
-                    <option>Sep</option>
-                    <option>Oct</option>
-                    <option>Nov</option>
-                    <option>Dec</option>
-                </select>
-
-                <select class="filter-select" id="qualFilter" onchange="applyFilters()">
-                    <option value="">All Qualifications</option>
-                </select>
+                <div class="filter-select-wrap">
+                    <select class="filter-select" id="statusFilter" onchange="applyFilters()">
+                        <option value="">All Status</option>
+                        <option value="pending">⏳ Pending</option>
+                        <option value="paid">✅ Paid</option>
+                    </select>
+                </div>
+                <div class="filter-select-wrap">
+                    <select class="filter-select" id="monthFilter" onchange="applyFilters()">
+                        <option value="">All Months</option>
+                        <option>Jan</option>
+                        <option>Feb</option>
+                        <option>Mar</option>
+                        <option>Apr</option>
+                        <option>May</option>
+                        <option>Jun</option>
+                        <option>Jul</option>
+                        <option>Aug</option>
+                        <option>Sep</option>
+                        <option>Oct</option>
+                        <option>Nov</option>
+                        <option>Dec</option>
+                    </select>
+                </div>
+                <div class="filter-select-wrap">
+                    <select class="filter-select" id="qualFilter" onchange="applyFilters()">
+                        <option value="">All Qualifications</option>
+                    </select>
+                </div>
                 <button class="btn btn-success" id="payAllBtn" onclick="payAllFiltered()"
                     style="display:none; padding:.55rem 1rem; font-size:.85rem; border-radius:8px; margin-left:auto">
                     💸 Pay All Filtered
@@ -379,6 +409,24 @@
     </main>
 
     <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Pay All Filtered Confirmation Dialog -->
+    <div class="confirm-dialog" id="payAllDialog">
+        <div class="confirm-box">
+            <span class="pay-confirm-icon">💸</span>
+            <h3>Confirm Bulk Payment</h3>
+            <p id="payAllDialogMsg" style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem">
+                Are you sure you want to mark these salaries as paid?
+            </p>
+            <div class="confirm-actions">
+                <button class="btn btn-secondary" onclick="closePayAllDialog()">Cancel</button>
+                <button class="btn" id="payAllDialogConfirmBtn" onclick="executePayAllFiltered()"
+                    style="background:rgba(16,185,129,.15);color:var(--success);border:1px solid rgba(16,185,129,.3)">
+                    ✅ Yes, Pay All
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Pay Salary Confirmation Dialog -->
     <div class="confirm-dialog" id="payDialog">
@@ -447,22 +495,30 @@
             return `${h}:${m} ${ampm}`;
         }
 
+        /* ── Indian number formatter ── */
+        function inrFmt(amount) {
+            return '₹' + parseFloat(amount || 0).toLocaleString('en-IN', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+            });
+        }
+
         /* ── Stats ── */
         function updateStats(list) {
             const total = allStaff.length;
             const paid = allStaff.filter(s => s.payment_status === 'paid').length;
             const pending = total - paid;
-            const totalAmt = allStaff.reduce((acc, s) => acc + (s.final_salary || 0), 0);
+            const totalAmt  = allStaff.reduce((acc, s) => acc + (s.final_salary || 0), 0);
             const disbursed = allStaff.filter(s => s.payment_status === 'paid')
                 .reduce((acc, s) => acc + (s.final_salary || 0), 0);
             const remaining = totalAmt - disbursed;
 
-            document.getElementById('ps-total').textContent = total;
-            document.getElementById('ps-payable').textContent = '₹' + totalAmt.toLocaleString();
-            document.getElementById('ps-paid').textContent = paid;
-            document.getElementById('ps-pending').textContent = pending;
-            document.getElementById('ps-disbursed').textContent = '₹' + disbursed.toLocaleString();
-            document.getElementById('ps-remaining').textContent = '₹' + remaining.toLocaleString();
+            document.getElementById('ps-total').textContent     = total;
+            document.getElementById('ps-payable').textContent   = inrFmt(totalAmt);
+            document.getElementById('ps-paid').textContent      = paid;
+            document.getElementById('ps-pending').textContent   = pending;
+            document.getElementById('ps-disbursed').textContent = inrFmt(disbursed);
+            document.getElementById('ps-remaining').textContent = inrFmt(remaining);
         }
 
         /* ── Populate filters ── */
@@ -516,7 +572,7 @@
                 return `<tr id="prow-${s.id}">
                     <td style="padding-left:1.25rem">
                         <div class="emp-cell">
-                            <span class="en">${s.name}</span>
+                            <a href="staff_detail.html?id=${s.id}" class="en" style="text-decoration:none; color:var(--text-bright);" onmouseover="this.style.color='var(--primary)';this.style.textDecoration='underline'" onmouseout="this.style.color='var(--text-bright)';this.style.textDecoration='none'">${s.name}</a>
                             <span class="eid">${s.employee_id || '#' + s.id}${s.role ? ' · ' + s.role : ''}</span>
                         </div>
                     </td>
@@ -563,15 +619,32 @@
         }
 
         /* ── Bulk Pay ── */
-        async function payAllFiltered() {
+        function payAllFiltered() {
             const pendingStaff = currentFilteredList.filter(s => s.payment_status !== 'paid');
             if (pendingStaff.length === 0) return;
             const ids = pendingStaff.map(s => s.id);
-            if (!confirm(`Are you sure you want to mark ${ids.length} salaries as paid?`)) return;
+            
+            document.getElementById('payAllDialogMsg').textContent = 
+                `Are you sure you want to mark ${ids.length} salaries as paid?`;
+            document.getElementById('payAllDialog').classList.add('active');
+        }
 
-            const btn = document.getElementById('payAllBtn');
+        function closePayAllDialog() {
+            document.getElementById('payAllDialog').classList.remove('active');
+        }
+
+        async function executePayAllFiltered() {
+            const pendingStaff = currentFilteredList.filter(s => s.payment_status !== 'paid');
+            if (pendingStaff.length === 0) return;
+            const ids = pendingStaff.map(s => s.id);
+
+            const btn = document.getElementById('payAllDialogConfirmBtn');
             btn.disabled = true;
             btn.textContent = 'Processing...';
+
+            const triggerBtn = document.getElementById('payAllBtn');
+            triggerBtn.disabled = true;
+            triggerBtn.textContent = 'Processing...';
 
             try {
                 const res = await fetch('/api/staff/bulk-pay', {
@@ -603,7 +676,10 @@
                 showToast('Network error. Please make sure you restarted the Node.js server!', 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = `💸 Pay All Filtered (${pendingStaff.length})`;
+                btn.innerHTML = `✅ Yes, Pay All`;
+                closePayAllDialog();
+                triggerBtn.disabled = false;
+                triggerBtn.innerHTML = `💸 Pay All Filtered (${pendingStaff.length})`;
             }
         }
 

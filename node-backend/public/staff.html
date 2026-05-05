@@ -170,7 +170,7 @@
                 const totalPL=s.personal_leave||0;
                 return `<tr>
                     <td style="color:var(--text-muted);font-size:.8rem">${s.employee_id||s.id}</td>
-                    <td><strong>${s.name}</strong></td>
+                    <td><a href="staff_detail.html?id=${s.id}" style="color:var(--text-bright);text-decoration:none;font-weight:600" onmouseover="this.style.color='var(--primary)';this.style.textDecoration='underline'" onmouseout="this.style.color='var(--text-bright)';this.style.textDecoration='none'">${s.name}</a></td>
                     <td style="color:var(--text-muted)">${s.role||'-'}</td>
                     <td><span class="badge">${s.department}</span></td>
                     <td>${s.qualification||'-'}</td>
@@ -262,7 +262,13 @@
             try{await fetch('/api/staff/'+deleteId,{method:'DELETE',headers:{'Authorization':'Bearer '+token}});showToast('Deleted','success');closeConfirm();loadStaff()}catch(e){showToast('Failed','error')}
         });
 
-        loadStaff();
+        loadStaff().then(() => {
+            const editParam = new URLSearchParams(window.location.search).get('edit');
+            if (editParam) {
+                const s = allStaff.find(x => x.id == editParam);
+                if (s) editStaff(s);
+            }
+        });
     </script>
 </body>
 </html>

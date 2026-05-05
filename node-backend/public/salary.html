@@ -321,14 +321,22 @@
             } catch (e) { showToast('Failed to load', 'error') }
         }
 
+        /* ── Indian number formatter ── */
+        function inrFmt(amount) {
+            return '₹' + parseFloat(amount || 0).toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            });
+        }
+
         function updateSummary(list) {
             document.getElementById('totalStaff').textContent = list.length;
             const totalGross = list.reduce((s, x) => s + (x.gross || 0), 0);
             const totalDed = list.reduce((s, x) => s + (x.deduction || 0) + (x.pf || 0) + (x.tax || 0), 0);
             const netPay = list.reduce((s, x) => s + (x.final_salary || 0), 0);
-            document.getElementById('totalGross').textContent = '₹' + totalGross.toLocaleString();
-            document.getElementById('totalDed').textContent = '-₹' + totalDed.toLocaleString();
-            document.getElementById('netPayroll').textContent = '₹' + netPay.toLocaleString();
+            document.getElementById('totalGross').textContent = inrFmt(totalGross);
+            document.getElementById('totalDed').textContent = '-' + inrFmt(totalDed);
+            document.getElementById('netPayroll').textContent = inrFmt(netPay);
         }
 
         function renderSalary(list) {
@@ -360,10 +368,10 @@
 
                 // Deduction breakdown
                 let dedHtml = '<div class="salary-breakdown">';
-                if (ded > 0) dedHtml += `<span class="salary-ded">Leave: -₹${ded.toLocaleString()}</span>`;
-                if (s.pf > 0) dedHtml += `<span class="salary-pf">PF: -₹${(s.pf || 0).toLocaleString()}</span>`;
-                if (s.tax > 0) dedHtml += `<span class="salary-pf">Tax: -₹${(s.tax || 0).toLocaleString()}</span>`;
-                if (totalDed === 0) dedHtml += '<span style="color:var(--text-muted)">₹0</span>';
+                if (ded > 0) dedHtml += `<span class="salary-ded">Leave: -${inrFmt(ded)}</span>`;
+                if (s.pf > 0) dedHtml += `<span class="salary-pf">PF: -${inrFmt(s.pf)}</span>`;
+                if (s.tax > 0) dedHtml += `<span class="salary-pf">Tax: -${inrFmt(s.tax)}</span>`;
+                if (totalDed === 0) dedHtml += `<span style="color:var(--text-muted)">₹0.00</span>`;
                 dedHtml += '</div>';
 
                 return `<tr>
@@ -375,10 +383,10 @@
                     </td>
                     <td style="color:var(--text-muted)">${s.role || '-'}</td>
                     <td><span class="badge">${s.qualification || '—'}</span></td>
-                    <td style="font-weight:600">₹${gross.toLocaleString()}</td>
+                    <td style="font-weight:600">${inrFmt(gross)}</td>
                     <td>${leaveHtml}</td>
                     <td>${dedHtml}</td>
-                    <td><span class="final-salary">₹${final_salary.toLocaleString()}</span></td>
+                    <td><span class="final-salary">${inrFmt(final_salary)}</span></td>
                     <td><button class="btn btn-success btn-sm" onclick="downloadPDF(${s.id},'${s.name.replace(/'/g, "\\'")}')">📥 PDF</button></td>
                 </tr>`}).join('');
         }
