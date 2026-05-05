@@ -6,6 +6,8 @@ const authMiddleware = require('../middleware/authMiddleware');
 router.use(authMiddleware); // Protect all staff routes
 
 router.get('/dashboard', staffController.getDashboardStats);
+router.get('/next-id', staffController.getNextId);
+router.get('/search/:empId', staffController.searchByEmployeeId);
 router.get('/', staffController.getAllStaff);
 router.get('/:id', staffController.getStaffById);
 router.post('/', staffController.createStaff);

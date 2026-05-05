@@ -3,33 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Atiq Payroll System</title>
+    <title>Login - PayNest Pro</title>
+    <meta name="description" content="PayNest Pro admin login - Secure payroll management system">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <div class="auth-wrapper">
+        <div class="auth-bg-orb"></div>
+        <div class="auth-bg-orb"></div>
+        <div class="auth-bg-orb"></div>
 
-    <div class="auth-container">
         <div class="auth-card">
-            <h2>Admin Login</h2>
+            <div class="brand">
+                <div class="brand-logo">💰</div>
+                <h2>PayNest Pro</h2>
+                <p>Secure Payroll Management</p>
+            </div>
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" required>
+                    <label for="email">Email Address</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">📧</span>
+                        <input type="email" id="email" placeholder="admin@paynest.com" required>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" required>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="password" placeholder="••••••••" required>
+                        <button type="button" class="toggle-password" onclick="togglePwd()">👁️</button>
+                    </div>
                 </div>
-                <button type="submit" class="btn">Login</button>
+                <button type="submit" class="btn btn-full" id="loginBtn">
+                    <span class="btn-text">Sign In</span>
+                    <span class="spinner"></span>
+                </button>
             </form>
-            <div id="errorMsg" style="color: red; margin-top: 10px; text-align: center;"></div>
         </div>
     </div>
 
+    <div class="toast-container" id="toastContainer"></div>
+
     <script>
+        function showToast(msg, type = 'info') {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = 'toast toast-' + type;
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 3500);
+        }
+
+        function togglePwd() {
+            const p = document.getElementById('password');
+            p.type = p.type === 'password' ? 'text' : 'password';
+        }
+
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            btn.classList.add('loading');
+
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
@@ -39,17 +75,18 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
-
                 const data = await res.json();
-                
                 if (res.ok) {
                     localStorage.setItem('token', data.token);
-                    window.location.href = '/dashboard.html';
+                    showToast('Login successful! Redirecting...', 'success');
+                    setTimeout(() => window.location.href = '/dashboard.html', 800);
                 } else {
-                    document.getElementById('errorMsg').innerText = data.error || 'Login failed';
+                    showToast(data.error || 'Login failed', 'error');
+                    btn.classList.remove('loading');
                 }
             } catch (err) {
-                document.getElementById('errorMsg').innerText = 'Server error';
+                showToast('Server connection error', 'error');
+                btn.classList.remove('loading');
             }
         });
     </script>
