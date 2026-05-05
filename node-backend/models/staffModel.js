@@ -33,12 +33,12 @@ class StaffModel {
              cl_quota, cl_used, medical_quota, medical_used,
              unpaid_leaves, deduction, final_salary, quota_cycle)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-            [d.employee_id||'', d.name, d.role||'', d.department, d.section||'', d.level||'', d.qualification||'', d.salary_type||'Monthly',
-             d.joining_date||null, d.status||'Active',
-             d.basic, d.hra, d.da, d.allowance, d.pf, d.tax, d.gross, d.net, d.month||'',
-             d.working_days||30, d.cl_taken||0, d.medical_taken||0, d.personal_leave||0,
-             d.cl_quota||8, d.cl_used||0, d.medical_quota||2, d.medical_used||0,
-             d.unpaid_leaves||0, d.deduction||0, d.final_salary||0, d.quota_cycle||'']
+            [d.employee_id || '', d.name, d.role || '', d.department, d.section || '', d.level || '', d.qualification || '', d.salary_type || 'Monthly',
+            d.joining_date || null, d.status || 'Active',
+            d.basic, d.hra, d.da, d.allowance, d.pf, d.tax, d.gross, d.net, d.month || '',
+            d.working_days || 30, d.cl_taken || 0, d.medical_taken || 0, d.personal_leave || 0,
+            d.cl_quota || 8, d.cl_used || 0, d.medical_quota || 2, d.medical_used || 0,
+            d.unpaid_leaves || 0, d.deduction || 0, d.final_salary || 0, d.quota_cycle || '']
         );
         return result.insertId;
     }
@@ -52,12 +52,12 @@ class StaffModel {
             cl_quota=?, cl_used=?, medical_quota=?, medical_used=?,
             unpaid_leaves=?, deduction=?, final_salary=?, quota_cycle=?
             WHERE id=?`,
-            [d.employee_id||'', d.name, d.role||'', d.department, d.section||'', d.level||'', d.qualification||'', d.salary_type||'Monthly',
-             d.joining_date||null, d.status||'Active',
-             d.basic, d.hra, d.da, d.allowance, d.pf, d.tax, d.gross, d.net, d.month||'',
-             d.working_days||30, d.cl_taken||0, d.medical_taken||0, d.personal_leave||0,
-             d.cl_quota||8, d.cl_used||0, d.medical_quota||2, d.medical_used||0,
-             d.unpaid_leaves||0, d.deduction||0, d.final_salary||0, d.quota_cycle||'', id]
+            [d.employee_id || '', d.name, d.role || '', d.department, d.section || '', d.level || '', d.qualification || '', d.salary_type || 'Monthly',
+            d.joining_date || null, d.status || 'Active',
+            d.basic, d.hra, d.da, d.allowance, d.pf, d.tax, d.gross, d.net, d.month || '',
+            d.working_days || 30, d.cl_taken || 0, d.medical_taken || 0, d.personal_leave || 0,
+            d.cl_quota || 8, d.cl_used || 0, d.medical_quota || 2, d.medical_used || 0,
+            d.unpaid_leaves || 0, d.deduction || 0, d.final_salary || 0, d.quota_cycle || '', id]
         );
         return result.affectedRows;
     }
@@ -67,15 +67,41 @@ class StaffModel {
         return result.affectedRows;
     }
 
+    static async paySalary(id) {
+        const date = new Date().toISOString().split('T')[0];
+        const time = new Date().toTimeString().split(' ')[0];
+        const [result] = await pool.query(
+            `UPDATE staff SET payment_status='paid', paid_date=?, paid_time=? WHERE id=?`,
+            [date, time, id]
+        );
+        return result.affectedRows;
+    }
+
+    static async payBulkSalary(ids) {
+        if (!ids || ids.length === 0) return 0;
+        const date = new Date().toISOString().split('T')[0];
+        const time = new Date().toTimeString().split(' ')[0];
+        const placeholders = ids.map(() => '?').join(',');
+        const [result] = await pool.query(
+            `UPDATE staff SET payment_status='paid', paid_date=?, paid_time=? WHERE id IN (${placeholders})`,
+            [date, time, ...ids]
+        );
+        return result.affectedRows;
+    }
+
     static async getDashboardStats() {
         const [staffCount] = await pool.query('SELECT COUNT(*) as total FROM staff');
         const [salaryPayout] = await pool.query('SELECT SUM(final_salary) as totalPayout FROM staff');
         const [departmentCount] = await pool.query('SELECT COUNT(DISTINCT department) as totalDeps FROM staff');
-        
+        const [pendingPayroll] = await pool.query('SELECT COUNT(*) as count FROM staff WHERE payment_status="pending" OR payment_status IS NULL');
+        const [paidPayroll] = await pool.query('SELECT COUNT(*) as count FROM staff WHERE payment_status="paid"');
+
         return {
             totalStaff: staffCount[0].total || 0,
             totalPayout: salaryPayout[0].totalPayout || 0,
-            totalDepartments: departmentCount[0].totalDeps || 0
+            totalDepartments: departmentCount[0].totalDeps || 0,
+            pendingPayroll: pendingPayroll[0].count || 0,
+            paidPayroll: paidPayroll[0].count || 0
         };
     }
 }

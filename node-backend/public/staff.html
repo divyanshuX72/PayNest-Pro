@@ -15,6 +15,7 @@
             <a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
             <a href="staff.html" class="active"><span class="nav-icon">👥</span> Staff Management</a>
             <a href="upload.html"><span class="nav-icon">🔄</span> Import & Export</a>
+            <a href="payroll.html"><span class="nav-icon">💸</span> Payroll Management</a>
             <a href="salary.html"><span class="nav-icon">💵</span> Salary Slips</a>
         </nav>
         <button class="logout-btn" onclick="logout()">🚪 Logout</button>
@@ -33,7 +34,7 @@
             <div style="margin-bottom:1.5rem">
                 <div class="search-bar">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" placeholder="Search by ID, name, role, department..." oninput="filterStaff()">
+                    <input type="text" id="searchInput" placeholder="Search by ID, name, role, department, qualification..." oninput="filterStaff()">
                 </div>
             </div>
 
@@ -187,7 +188,7 @@
 
         function filterStaff(){
             const q=document.getElementById('searchInput').value.toLowerCase();
-            renderStaff(allStaff.filter(s=>s.name.toLowerCase().includes(q)||s.department.toLowerCase().includes(q)||(s.role||'').toLowerCase().includes(q)||(s.employee_id||'').toLowerCase().includes(q)));
+            renderStaff(allStaff.filter(s=>s.name.toLowerCase().includes(q)||s.department.toLowerCase().includes(q)||(s.role||'').toLowerCase().includes(q)||(s.employee_id||'').toLowerCase().includes(q)||(s.qualification||'').toLowerCase().includes(q)));
         }
 
         function openModal(){

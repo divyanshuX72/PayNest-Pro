@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
+
         .summary-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
@@ -21,10 +23,12 @@
             backdrop-filter: blur(12px);
             transition: transform .2s, box-shadow .2s;
         }
+
         .summary-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(59,130,246,0.08);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.08);
         }
+
         .summary-card .label {
             font-size: .75rem;
             color: var(--text-muted);
@@ -32,37 +36,110 @@
             letter-spacing: .04em;
             margin-bottom: .4rem;
         }
+
         .summary-card .value {
             font-size: 1.4rem;
             font-weight: 700;
         }
-        .summary-card .value.primary { color: var(--primary); }
-        .summary-card .value.success { color: var(--success); }
-        .summary-card .value.danger { color: var(--danger); }
-        .summary-card .value.warn { color: #f59e0b; }
 
-        .salary-table th { white-space: nowrap; font-size: .78rem; }
-        .salary-table td { font-size: .82rem; vertical-align: middle; }
+        .summary-card .value.primary {
+            color: var(--primary);
+        }
 
-        .emp-info { display: flex; flex-direction: column; gap: 2px; }
-        .emp-name { font-weight: 600; color: var(--text-main); }
-        .emp-id { font-size: .7rem; color: var(--text-muted); }
-        .emp-qual { font-size: .68rem; color: var(--primary); opacity: .8; }
+        .summary-card .value.success {
+            color: var(--success);
+        }
 
-        .leave-cell { display: flex; flex-direction: column; gap: 2px; }
-        .leave-row { display: flex; gap: .5rem; font-size: .72rem; }
-        .leave-tag { padding: .1rem .4rem; border-radius: 6px; font-weight: 500; }
-        .leave-paid { background: rgba(16,185,129,0.1); color: var(--success); }
-        .leave-unpaid { background: rgba(239,68,68,0.1); color: var(--danger); }
+        .summary-card .value.danger {
+            color: var(--danger);
+        }
 
-        .salary-breakdown { display: flex; flex-direction: column; gap: 2px; font-size: .75rem; }
-        .salary-gross { color: var(--text-muted); }
-        .salary-ded { color: var(--danger); }
-        .salary-pf { color: #f59e0b; }
+        .summary-card .value.warn {
+            color: #f59e0b;
+        }
 
-        .final-salary { 
-            font-weight: 700; 
-            font-size: 1rem; 
+        .salary-table th {
+            white-space: nowrap;
+            font-size: .78rem;
+        }
+
+        .salary-table td {
+            font-size: .82rem;
+            vertical-align: middle;
+        }
+
+        .emp-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .emp-name {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .emp-id {
+            font-size: .7rem;
+            color: var(--text-muted);
+        }
+
+        .emp-qual {
+            font-size: .68rem;
+            color: var(--primary);
+            opacity: .8;
+        }
+
+        .leave-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .leave-row {
+            display: flex;
+            gap: .5rem;
+            font-size: .72rem;
+        }
+
+        .leave-tag {
+            padding: .1rem .4rem;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .leave-paid {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .leave-unpaid {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .salary-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: .75rem;
+        }
+
+        .salary-gross {
+            color: var(--text-muted);
+        }
+
+        .salary-ded {
+            color: var(--danger);
+        }
+
+        .salary-pf {
+            color: #f59e0b;
+        }
+
+        .final-salary {
+            font-weight: 700;
+            font-size: 1rem;
             color: var(--success);
             white-space: nowrap;
         }
@@ -75,8 +152,19 @@
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
-        .toolbar .search-bar { flex: 1; min-width: 200px; max-width: 400px; }
-        .month-filter { display: flex; gap: .5rem; align-items: center; }
+
+        .toolbar .search-bar {
+            flex: 1;
+            min-width: 200px;
+            max-width: 400px;
+        }
+
+        .month-filter {
+            display: flex;
+            gap: .5rem;
+            align-items: center;
+        }
+
         .month-filter select {
             background: var(--card-bg);
             color: var(--text-main);
@@ -86,20 +174,26 @@
             font-size: .82rem;
             font-family: inherit;
         }
+
         .month-filter select option {
             background-color: var(--bg-dark, #0f172a);
             color: #f8fafc;
         }
     </style>
 </head>
+
 <body>
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-brand"><div class="brand-icon">💰</div><h2>PayNest Pro</h2></div>
+        <div class="sidebar-brand">
+            <div class="brand-icon">💰</div>
+            <h2>PayNest Pro</h2>
+        </div>
         <nav>
             <a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
             <a href="staff.html"><span class="nav-icon">👥</span> Staff Management</a>
             <a href="upload.html"><span class="nav-icon">🔄</span> Import & Export</a>
+            <a href="payroll.html"><span class="nav-icon">💸</span> Payroll Management</a>
             <a href="salary.html" class="active"><span class="nav-icon">💵</span> Salary Slips</a>
         </nav>
         <button class="logout-btn" onclick="logout()">🚪 Logout</button>
@@ -138,14 +232,24 @@
             <div class="toolbar">
                 <div class="search-bar">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" placeholder="Search by ID, name, role, department..." oninput="filterSalary()">
+                    <input type="text" id="searchInput" placeholder="Search by ID, name, role, department, qualification..."
+                        oninput="filterSalary()">
                 </div>
                 <div class="month-filter">
                     <select id="monthFilter" onchange="filterSalary()">
                         <option value="">All Months</option>
-                        <option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option>
-                        <option>May</option><option>Jun</option><option>Jul</option><option>Aug</option>
-                        <option>Sep</option><option>Oct</option><option>Nov</option><option>Dec</option>
+                        <option>Jan</option>
+                        <option>Feb</option>
+                        <option>Mar</option>
+                        <option>Apr</option>
+                        <option>May</option>
+                        <option>Jun</option>
+                        <option>Jul</option>
+                        <option>Aug</option>
+                        <option>Sep</option>
+                        <option>Oct</option>
+                        <option>Nov</option>
+                        <option>Dec</option>
                     </select>
                 </div>
             </div>
@@ -153,9 +257,24 @@
             <!-- TABLE -->
             <div class="card">
                 <div id="skeletonLoader">
-                    <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
-                    <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
-                    <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+                    <div class="skeleton-row">
+                        <div class="skeleton"></div>
+                        <div class="skeleton"></div>
+                        <div class="skeleton"></div>
+                        <div class="skeleton"></div>
+                    </div>
+                    <div class="skeleton-row">
+                        <div class="skeleton"></div>
+                        <div class="skeleton"></div>
+                        <div class="skeleton"></div>
+                        <div class="skeleton"></div>
+                    </div>
+                    <div class="skeleton-row">
+                        <div class="skeleton"></div>
+                        <div class="skeleton"></div>
+                        <div class="skeleton"></div>
+                        <div class="skeleton"></div>
+                    </div>
                 </div>
                 <div id="emptyState" class="empty-state" style="display:none">
                     <span class="empty-icon">💵</span>
@@ -163,16 +282,18 @@
                 </div>
                 <div style="overflow-x:auto">
                     <table id="salaryTable" class="salary-table" style="display:none">
-                        <thead><tr>
-                            <th>Employee</th>
-                            <th>Role</th>
-                            <th>Dept</th>
-                            <th>Gross</th>
-                            <th>Leaves</th>
-                            <th>Deductions</th>
-                            <th>Final Salary</th>
-                            <th>Slip</th>
-                        </tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Role</th>
+                                <th>Qualification</th>
+                                <th>Gross</th>
+                                <th>Leaves</th>
+                                <th>Deductions</th>
+                                <th>Final Salary</th>
+                                <th>Slip</th>
+                            </tr>
+                        </thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -183,115 +304,116 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
-        const token=localStorage.getItem('token');
-        if(!token) window.location.href='/login.html';
-        let allStaff=[];
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+        let allStaff = [];
 
-        function logout(){localStorage.removeItem('token');window.location.href='/login.html'}
-        function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('active')}
-        function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('active')}
-        function showToast(msg,type='info'){const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className='toast toast-'+type;t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),3500)}
+        function logout() { localStorage.removeItem('token'); window.location.href = '/login.html' }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('active') }
+        function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('active') }
+        function showToast(msg, type = 'info') { const c = document.getElementById('toastContainer'); const t = document.createElement('div'); t.className = 'toast toast-' + type; t.textContent = msg; c.appendChild(t); setTimeout(() => t.remove(), 3500) }
 
-        async function loadSalaryData(){
-            try{
-                const res=await fetch('/api/staff',{headers:{'Authorization':'Bearer '+token}});
-                allStaff=await res.json();
+        async function loadSalaryData() {
+            try {
+                const res = await fetch('/api/staff', { headers: { 'Authorization': 'Bearer ' + token } });
+                allStaff = await res.json();
                 renderSalary(allStaff);
-            }catch(e){showToast('Failed to load','error')}
+            } catch (e) { showToast('Failed to load', 'error') }
         }
 
-        function updateSummary(list){
+        function updateSummary(list) {
             document.getElementById('totalStaff').textContent = list.length;
-            const totalGross = list.reduce((s,x) => s + (x.gross||0), 0);
-            const totalDed = list.reduce((s,x) => s + (x.deduction||0) + (x.pf||0) + (x.tax||0), 0);
-            const netPay = list.reduce((s,x) => s + (x.final_salary||0), 0);
+            const totalGross = list.reduce((s, x) => s + (x.gross || 0), 0);
+            const totalDed = list.reduce((s, x) => s + (x.deduction || 0) + (x.pf || 0) + (x.tax || 0), 0);
+            const netPay = list.reduce((s, x) => s + (x.final_salary || 0), 0);
             document.getElementById('totalGross').textContent = '₹' + totalGross.toLocaleString();
             document.getElementById('totalDed').textContent = '-₹' + totalDed.toLocaleString();
             document.getElementById('netPayroll').textContent = '₹' + netPay.toLocaleString();
         }
 
-        function renderSalary(list){
-            document.getElementById('skeletonLoader').style.display='none';
-            const table=document.getElementById('salaryTable');
-            const empty=document.getElementById('emptyState');
-            if(!list.length){table.style.display='none';empty.style.display='block';updateSummary([]);return}
-            table.style.display='table';empty.style.display='none';
+        function renderSalary(list) {
+            document.getElementById('skeletonLoader').style.display = 'none';
+            const table = document.getElementById('salaryTable');
+            const empty = document.getElementById('emptyState');
+            if (!list.length) { table.style.display = 'none'; empty.style.display = 'block'; updateSummary([]); return }
+            table.style.display = 'table'; empty.style.display = 'none';
             updateSummary(list);
 
-            table.querySelector('tbody').innerHTML=list.map(s=>{
-                const cl=s.cl_taken||0, med=s.medical_taken||0, pers=s.personal_leave||0;
-                const unpaid=s.unpaid_leaves||0;
+            table.querySelector('tbody').innerHTML = list.map(s => {
+                const cl = s.cl_taken || 0, med = s.medical_taken || 0, pers = s.personal_leave || 0;
+                const unpaid = s.unpaid_leaves || 0;
                 const paidLeaves = (cl + med) - unpaid + (unpaid > 0 ? 0 : 0);
-                const ded=s.deduction||0;
-                const pfTax=(s.pf||0)+(s.tax||0);
+                const ded = s.deduction || 0;
+                const pfTax = (s.pf || 0) + (s.tax || 0);
                 const totalDed = ded + pfTax;
-                const gross = s.gross||0;
-                const final_salary = s.final_salary||0;
+                const gross = s.gross || 0;
+                const final_salary = s.final_salary || 0;
 
                 // Leave display
                 let leaveHtml = '<div class="leave-cell">';
-                if(cl > 0) leaveHtml += `<div class="leave-row"><span class="leave-tag leave-paid">CL: ${cl}</span></div>`;
-                if(med > 0) leaveHtml += `<div class="leave-row"><span class="leave-tag leave-paid">Med: ${med}</span></div>`;
-                if(pers > 0) leaveHtml += `<div class="leave-row"><span class="leave-tag leave-unpaid">PL: ${pers}</span></div>`;
-                if(unpaid > 0) leaveHtml += `<div class="leave-row"><span class="leave-tag leave-unpaid">${unpaid} unpaid</span></div>`;
-                if(cl===0 && med===0 && pers===0) leaveHtml += '<span style="color:var(--text-muted);font-size:.75rem">No leaves</span>';
+                if (cl > 0) leaveHtml += `<div class="leave-row"><span class="leave-tag leave-paid">CL: ${cl}</span></div>`;
+                if (med > 0) leaveHtml += `<div class="leave-row"><span class="leave-tag leave-paid">Med: ${med}</span></div>`;
+                if (pers > 0) leaveHtml += `<div class="leave-row"><span class="leave-tag leave-unpaid">PL: ${pers}</span></div>`;
+                if (unpaid > 0) leaveHtml += `<div class="leave-row"><span class="leave-tag leave-unpaid">${unpaid} unpaid</span></div>`;
+                if (cl === 0 && med === 0 && pers === 0) leaveHtml += '<span style="color:var(--text-muted);font-size:.75rem">No leaves</span>';
                 leaveHtml += '</div>';
 
                 // Deduction breakdown
                 let dedHtml = '<div class="salary-breakdown">';
-                if(ded > 0) dedHtml += `<span class="salary-ded">Leave: -₹${ded.toLocaleString()}</span>`;
-                if(s.pf > 0) dedHtml += `<span class="salary-pf">PF: -₹${(s.pf||0).toLocaleString()}</span>`;
-                if(s.tax > 0) dedHtml += `<span class="salary-pf">Tax: -₹${(s.tax||0).toLocaleString()}</span>`;
-                if(totalDed === 0) dedHtml += '<span style="color:var(--text-muted)">₹0</span>';
+                if (ded > 0) dedHtml += `<span class="salary-ded">Leave: -₹${ded.toLocaleString()}</span>`;
+                if (s.pf > 0) dedHtml += `<span class="salary-pf">PF: -₹${(s.pf || 0).toLocaleString()}</span>`;
+                if (s.tax > 0) dedHtml += `<span class="salary-pf">Tax: -₹${(s.tax || 0).toLocaleString()}</span>`;
+                if (totalDed === 0) dedHtml += '<span style="color:var(--text-muted)">₹0</span>';
                 dedHtml += '</div>';
 
                 return `<tr>
                     <td>
                         <div class="emp-info">
                             <span class="emp-name">${s.name}</span>
-                            <span class="emp-id">${s.employee_id || '#'+s.id}</span>
-                            ${s.qualification ? `<span class="emp-qual">${s.qualification}</span>` : ''}
+                            <span class="emp-id">${s.employee_id || '#' + s.id}</span>
                         </div>
                     </td>
-                    <td style="color:var(--text-muted)">${s.role||'-'}</td>
-                    <td><span class="badge">${s.department}</span></td>
+                    <td style="color:var(--text-muted)">${s.role || '-'}</td>
+                    <td><span class="badge">${s.qualification || '—'}</span></td>
                     <td style="font-weight:600">₹${gross.toLocaleString()}</td>
                     <td>${leaveHtml}</td>
                     <td>${dedHtml}</td>
                     <td><span class="final-salary">₹${final_salary.toLocaleString()}</span></td>
-                    <td><button class="btn btn-success btn-sm" onclick="downloadPDF(${s.id},'${s.name.replace(/'/g,"\\'")}')">📥 PDF</button></td>
+                    <td><button class="btn btn-success btn-sm" onclick="downloadPDF(${s.id},'${s.name.replace(/'/g, "\\'")}')">📥 PDF</button></td>
                 </tr>`}).join('');
         }
 
-        function filterSalary(){
-            const q=document.getElementById('searchInput').value.toLowerCase();
-            const month=document.getElementById('monthFilter').value;
+        function filterSalary() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            const month = document.getElementById('monthFilter').value;
             let filtered = allStaff;
-            if(q) filtered = filtered.filter(s=>
+            if (q) filtered = filtered.filter(s =>
                 s.name.toLowerCase().includes(q) ||
                 s.department.toLowerCase().includes(q) ||
-                (s.role||'').toLowerCase().includes(q) ||
-                (s.employee_id||'').toLowerCase().includes(q)
+                (s.role || '').toLowerCase().includes(q) ||
+                (s.employee_id || '').toLowerCase().includes(q) ||
+                (s.qualification || '').toLowerCase().includes(q)
             );
-            if(month) filtered = filtered.filter(s=>(s.month||'')=== month);
+            if (month) filtered = filtered.filter(s => (s.month || '') === month);
             renderSalary(filtered);
         }
 
-        function downloadPDF(id, name){
-            showToast('Downloading PDF...','info');
+        function downloadPDF(id, name) {
+            showToast('Downloading PDF...', 'info');
             const downloadUrl = '/api/pdf/' + id + '?token=' + token;
             let iframe = document.getElementById('downloadFrame');
-            if(!iframe){
+            if (!iframe) {
                 iframe = document.createElement('iframe');
                 iframe.id = 'downloadFrame';
                 iframe.style.display = 'none';
                 document.body.appendChild(iframe);
             }
             iframe.src = downloadUrl;
-            setTimeout(function(){ showToast('PDF downloaded!', 'success'); }, 1500);
+            setTimeout(function () { showToast('PDF downloaded!', 'success'); }, 1500);
         }
 
         loadSalaryData();
     </script>
 </body>
+
 </html>

@@ -127,6 +127,25 @@ exports.deleteStaff = async (req, res, next) => {
     } catch (error) { next(error); }
 };
 
+exports.paySalary = async (req, res, next) => {
+    try {
+        const affectedRows = await StaffModel.paySalary(req.params.id);
+        if (affectedRows === 0) return res.status(404).json({ error: 'Staff not found' });
+        res.json({ message: 'Salary paid successfully' });
+    } catch (error) { next(error); }
+};
+
+exports.payBulkSalary = async (req, res, next) => {
+    try {
+        const { ids } = req.body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ error: 'No staff IDs provided' });
+        }
+        const affectedRows = await StaffModel.payBulkSalary(ids);
+        res.json({ message: `${affectedRows} salaries paid successfully` });
+    } catch (error) { next(error); }
+};
+
 exports.getDashboardStats = async (req, res, next) => {
     try {
         const stats = await StaffModel.getDashboardStats();

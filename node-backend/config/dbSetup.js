@@ -12,9 +12,9 @@ const setupDB = async () => {
         });
 
         const dbName = process.env.DB_NAME || 'payroll_system_new';
-        
+
         console.log(`Setting up database: ${dbName}...`);
-        
+
         await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
         console.log(`Database \`${dbName}\` created or already exists.`);
 
@@ -66,6 +66,9 @@ const setupDB = async () => {
                 deduction FLOAT DEFAULT 0,
                 final_salary FLOAT DEFAULT 0,
                 quota_cycle VARCHAR(20) DEFAULT '',
+                payment_status VARCHAR(20) DEFAULT 'pending',
+                paid_date DATE,
+                paid_time TIME,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
@@ -93,7 +96,10 @@ const setupDB = async () => {
             { name: 'deduction', def: 'FLOAT DEFAULT 0' },
             { name: 'final_salary', def: 'FLOAT DEFAULT 0' },
             { name: 'quota_cycle', def: "VARCHAR(20) DEFAULT ''" },
-            { name: 'month', def: "VARCHAR(20) DEFAULT ''" }
+            { name: 'month', def: "VARCHAR(20) DEFAULT ''" },
+            { name: 'payment_status', def: "VARCHAR(20) DEFAULT 'pending'" },
+            { name: 'paid_date', def: 'DATE' },
+            { name: 'paid_time', def: 'TIME' }
         ];
         for (const col of newCols) {
             try {

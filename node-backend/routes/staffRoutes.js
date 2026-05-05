@@ -11,6 +11,8 @@ router.get('/search/:empId', staffController.searchByEmployeeId);
 router.get('/', staffController.getAllStaff);
 router.get('/:id', staffController.getStaffById);
 router.post('/', staffController.createStaff);
+router.put('/bulk-pay', staffController.payBulkSalary);
+router.put('/:id/pay', staffController.paySalary);
 router.put('/:id', staffController.updateStaff);
 router.delete('/:id', staffController.deleteStaff);
 
