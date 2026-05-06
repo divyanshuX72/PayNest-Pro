@@ -95,25 +95,25 @@ exports.getNextId = async (req, res, next) => {
 
 exports.createStaff = async (req, res, next) => {
     try {
-        const { employee_id, name, role, department, qualification, salary_type, joining_date, status, month } = req.body;
+        const { employee_id, name, role, department, section, qualification, salary_type, joining_date, status, month } = req.body;
         if (!name || !department) {
             return res.status(400).json({ error: 'Name and department are required' });
         }
         const calculated = calculatePayroll(req.body);
-        const newStaffId = await StaffModel.create({ employee_id, name, role, department, qualification, salary_type, joining_date, status, month, ...calculated });
+        const newStaffId = await StaffModel.create({ employee_id, name, role, department, section, qualification, salary_type, joining_date, status, month, ...calculated });
         res.status(201).json({ message: 'Staff added successfully', id: newStaffId, employee_id });
     } catch (error) { next(error); }
 };
 
 exports.updateStaff = async (req, res, next) => {
     try {
-        const { employee_id, name, role, department, qualification, salary_type, joining_date, status, month } = req.body;
+        const { employee_id, name, role, department, section, qualification, salary_type, joining_date, status, month } = req.body;
         if (!name || !department) {
             return res.status(400).json({ error: 'Name and department are required' });
         }
         const existingStaff = await StaffModel.findById(req.params.id);
         const calculated = calculatePayroll(req.body, existingStaff);
-        const affectedRows = await StaffModel.update(req.params.id, { employee_id, name, role, department, qualification, salary_type, joining_date, status, month, ...calculated });
+        const affectedRows = await StaffModel.update(req.params.id, { employee_id, name, role, department, section, qualification, salary_type, joining_date, status, month, ...calculated });
         if (affectedRows === 0) return res.status(404).json({ error: 'Staff not found' });
         res.json({ message: 'Staff updated successfully' });
     } catch (error) { next(error); }
@@ -124,6 +124,13 @@ exports.deleteStaff = async (req, res, next) => {
         const affectedRows = await StaffModel.delete(req.params.id);
         if (affectedRows === 0) return res.status(404).json({ error: 'Staff not found' });
         res.json({ message: 'Staff deleted successfully' });
+    } catch (error) { next(error); }
+};
+
+exports.deleteAllStaff = async (req, res, next) => {
+    try {
+        await StaffModel.deleteAll();
+        res.json({ message: 'All staff data deleted successfully' });
     } catch (error) { next(error); }
 };
 

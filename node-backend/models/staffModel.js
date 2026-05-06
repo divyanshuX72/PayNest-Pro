@@ -67,6 +67,11 @@ class StaffModel {
         return result.affectedRows;
     }
 
+    static async deleteAll() {
+        const [result] = await pool.query('TRUNCATE TABLE staff');
+        return result.affectedRows;
+    }
+
     static async paySalary(id) {
         const date = new Date().toISOString().split('T')[0];
         const time = new Date().toTimeString().split(' ')[0];
@@ -96,12 +101,89 @@ class StaffModel {
         const [pendingPayroll] = await pool.query('SELECT COUNT(*) as count FROM staff WHERE payment_status="pending" OR payment_status IS NULL');
         const [paidPayroll] = await pool.query('SELECT COUNT(*) as count FROM staff WHERE payment_status="paid"');
 
+        // Section distribution (for pie chart)
+        const [sectionData] = await pool.query(`
+            SELECT 
+                COALESCE(NULLIF(TRIM(section), ''), NULLIF(TRIM(department), ''), 'Not Specified') as section_name,
+                SUM(final_salary) as total_salary,
+                COUNT(*) as staff_count
+            FROM staff 
+            GROUP BY section_name
+            ORDER BY total_salary DESC
+        `);
+
+        // Salary breakdown totals
+        const [salaryBreakdown] = await pool.query(`
+            SELECT 
+                ROUND(SUM(basic), 2) as totalBasic,
+                ROUND(SUM(hra), 2) as totalHRA,
+                ROUND(SUM(da), 2) as totalDA,
+                ROUND(SUM(allowance), 2) as totalAllowance,
+                ROUND(SUM(pf), 2) as totalPF,
+                ROUND(SUM(tax), 2) as totalTax,
+                ROUND(SUM(deduction), 2) as totalDeduction,
+                ROUND(SUM(gross), 2) as totalGross
+            FROM staff
+        `);
+
+        // Recent activities from database
+        const [recentlyAdded] = await pool.query(`
+            SELECT id, name, role, department, section, final_salary, created_at 
+            FROM staff ORDER BY created_at DESC, id DESC LIMIT 5
+        `);
+
+        const [recentlyPaid] = await pool.query(`
+            SELECT id, name, department, final_salary, paid_date, paid_time 
+            FROM staff WHERE payment_status='paid' AND paid_date IS NOT NULL 
+            ORDER BY paid_date DESC, paid_time DESC LIMIT 5
+        `);
+
+        const [highestSalary] = await pool.query(`
+            SELECT name, department, final_salary FROM staff ORDER BY final_salary DESC LIMIT 3
+        `);
+
+        const [highestDeduction] = await pool.query(`
+            SELECT name, department, deduction, unpaid_leaves FROM staff 
+            WHERE deduction > 0 ORDER BY deduction DESC LIMIT 3
+        `);
+
+        const [mostLeaves] = await pool.query(`
+            SELECT name, department, (cl_taken + medical_taken + personal_leave) as total_leaves,
+                   unpaid_leaves FROM staff 
+            ORDER BY total_leaves DESC LIMIT 3
+        `);
+
+        // Today's stats
+        const today = new Date().toISOString().split('T')[0];
+        const [todayAdded] = await pool.query(`SELECT COUNT(*) as count FROM staff WHERE DATE(created_at) = ?`, [today]);
+        const [todayPaid] = await pool.query(`SELECT COUNT(*) as count FROM staff WHERE paid_date = ?`, [today]);
+
+        // Monthly salary trend
+        const [monthlyTrend] = await pool.query(`
+            SELECT 
+                month,
+                ROUND(SUM(final_salary), 2) as totalPayout
+            FROM staff
+            WHERE month IS NOT NULL AND TRIM(month) != ''
+            GROUP BY month
+        `);
+
         return {
             totalStaff: staffCount[0].total || 0,
             totalPayout: salaryPayout[0].totalPayout || 0,
             totalDepartments: departmentCount[0].totalDeps || 0,
             pendingPayroll: pendingPayroll[0].count || 0,
-            paidPayroll: paidPayroll[0].count || 0
+            paidPayroll: paidPayroll[0].count || 0,
+            sectionDistribution: sectionData || [],
+            salaryBreakdown: salaryBreakdown[0] || {},
+            monthlyTrend: monthlyTrend || [],
+            recentlyAdded: recentlyAdded || [],
+            recentlyPaid: recentlyPaid || [],
+            highestSalary: highestSalary || [],
+            highestDeduction: highestDeduction || [],
+            mostLeaves: mostLeaves || [],
+            todayAdded: todayAdded[0].count || 0,
+            todayPaid: todayPaid[0].count || 0
         };
     }
 }

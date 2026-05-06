@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,16 +27,23 @@
         .profile-header::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0;
+            top: 0;
+            left: 0;
+            right: 0;
             height: 3px;
             background: linear-gradient(90deg, var(--primary), #8b5cf6);
         }
 
         .profile-avatar {
-            width: 64px; height: 64px;
+            width: 64px;
+            height: 64px;
             border-radius: 14px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; font-weight: 700; color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
             background: linear-gradient(135deg, #3b82f6, #8b5cf6);
             flex-shrink: 0;
         }
@@ -72,23 +80,29 @@
         }
 
         .status-active {
-            display: inline-flex; align-items: center; gap: .3rem;
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
             padding: .22rem .7rem;
-            background: rgba(16,185,129,.12);
+            background: rgba(16, 185, 129, .12);
             color: var(--success);
-            border: 1px solid rgba(16,185,129,.2);
+            border: 1px solid rgba(16, 185, 129, .2);
             border-radius: 20px;
-            font-size: .73rem; font-weight: 600;
+            font-size: .73rem;
+            font-weight: 600;
         }
 
         .status-inactive {
-            display: inline-flex; align-items: center; gap: .3rem;
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
             padding: .22rem .7rem;
-            background: rgba(239,68,68,.12);
+            background: rgba(239, 68, 68, .12);
             color: var(--danger);
-            border: 1px solid rgba(239,68,68,.2);
+            border: 1px solid rgba(239, 68, 68, .2);
             border-radius: 20px;
-            font-size: .73rem; font-weight: 600;
+            font-size: .73rem;
+            font-weight: 600;
         }
 
         /* ── Detail Cards Grid ── */
@@ -110,7 +124,7 @@
 
         .detail-card:hover {
             border-color: var(--border-glow);
-            box-shadow: 0 8px 32px rgba(59,130,246,0.06);
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.06);
         }
 
         .detail-card-title {
@@ -137,7 +151,7 @@
             justify-content: space-between;
             align-items: center;
             padding: .55rem 0;
-            border-bottom: 1px solid rgba(148,163,184,0.06);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.06);
         }
 
         .info-row:last-child {
@@ -157,17 +171,28 @@
             text-align: right;
         }
 
-        .info-value.green { color: var(--success); }
-        .info-value.red { color: var(--danger); }
-        .info-value.blue { color: var(--primary); }
-        .info-value.yellow { color: var(--warning); }
+        .info-value.green {
+            color: var(--success);
+        }
+
+        .info-value.red {
+            color: var(--danger);
+        }
+
+        .info-value.blue {
+            color: var(--primary);
+        }
+
+        .info-value.yellow {
+            color: var(--warning);
+        }
 
         /* ── Salary highlight ── */
         .salary-total {
             margin-top: .75rem;
             padding: .85rem 1rem;
-            background: rgba(59,130,246,0.06);
-            border: 1px solid rgba(59,130,246,0.12);
+            background: rgba(59, 130, 246, 0.06);
+            border: 1px solid rgba(59, 130, 246, 0.12);
             border-radius: 8px;
             display: flex;
             justify-content: space-between;
@@ -194,7 +219,7 @@
         .leave-bar-track {
             width: 100%;
             height: 6px;
-            background: rgba(148,163,184,0.1);
+            background: rgba(148, 163, 184, 0.1);
             border-radius: 3px;
             overflow: hidden;
             margin-top: .4rem;
@@ -206,9 +231,17 @@
             transition: width .5s ease;
         }
 
-        .leave-bar-fill.safe { background: var(--success); }
-        .leave-bar-fill.warn { background: var(--warning); }
-        .leave-bar-fill.over { background: var(--danger); }
+        .leave-bar-fill.safe {
+            background: var(--success);
+        }
+
+        .leave-bar-fill.warn {
+            background: var(--warning);
+        }
+
+        .leave-bar-fill.over {
+            background: var(--danger);
+        }
 
         /* ── Back & Action buttons ── */
         .top-actions {
@@ -223,7 +256,7 @@
             align-items: center;
             gap: .5rem;
             padding: .5rem 1rem;
-            background: rgba(100,116,139,0.15);
+            background: rgba(100, 116, 139, 0.15);
             border: 1px solid var(--border);
             border-radius: 8px;
             color: var(--text-main);
@@ -235,7 +268,7 @@
         }
 
         .btn-back:hover {
-            background: rgba(100,116,139,0.25);
+            background: rgba(100, 116, 139, 0.25);
         }
 
         .btn-edit {
@@ -244,8 +277,8 @@
             align-items: center;
             gap: .45rem;
             padding: .5rem 1rem;
-            background: rgba(59,130,246,0.12);
-            border: 1px solid rgba(59,130,246,0.2);
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.2);
             border-radius: 8px;
             color: var(--primary);
             font-size: .85rem;
@@ -255,7 +288,7 @@
         }
 
         .btn-edit:hover {
-            background: rgba(59,130,246,0.2);
+            background: rgba(59, 130, 246, 0.2);
         }
 
         /* ── Loading skeleton ── */
@@ -301,10 +334,14 @@
         }
     </style>
 </head>
+
 <body>
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-brand"><div class="brand-icon">💰</div><h2>PayNest Pro</h2></div>
+        <div class="sidebar-brand">
+            <div class="brand-icon">💰</div>
+            <h2>PayNest Pro</h2>
+        </div>
         <nav>
             <a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
             <a href="staff.html" class="active"><span class="nav-icon">👥</span> Staff Management</a>
@@ -370,25 +407,39 @@
                     <!-- Personal Info -->
                     <div class="detail-card">
                         <div class="detail-card-title"><span class="icon">👤</span> Personal Info</div>
-                        <div class="info-row"><span class="info-label">Full Name</span><span class="info-value" id="dName">—</span></div>
-                        <div class="info-row"><span class="info-label">Employee ID</span><span class="info-value" id="dEmpId">—</span></div>
-                        <div class="info-row"><span class="info-label">Role</span><span class="info-value" id="dRole">—</span></div>
-                        <div class="info-row"><span class="info-label">Department</span><span class="info-value" id="dDept">—</span></div>
-                        <div class="info-row"><span class="info-label">Section</span><span class="info-value" id="dSection">—</span></div>
-                        <div class="info-row"><span class="info-label">Qualification</span><span class="info-value" id="dQual">—</span></div>
-                        <div class="info-row"><span class="info-label">Joining Date</span><span class="info-value" id="dJoining">—</span></div>
-                        <div class="info-row"><span class="info-label">Status</span><span class="info-value" id="dStatus">—</span></div>
+                        <div class="info-row"><span class="info-label">Full Name</span><span class="info-value"
+                                id="dName">—</span></div>
+                        <div class="info-row"><span class="info-label">Employee ID</span><span class="info-value"
+                                id="dEmpId">—</span></div>
+                        <div class="info-row"><span class="info-label">Role</span><span class="info-value"
+                                id="dRole">—</span></div>
+                        <div class="info-row"><span class="info-label">Department</span><span class="info-value"
+                                id="dDept">—</span></div>
+                        <div class="info-row"><span class="info-label">Section</span><span class="info-value"
+                                id="dSection">—</span></div>
+                        <div class="info-row"><span class="info-label">Section</span><span class="info-value"
+                                id="dQual">—</span></div>
+                        <div class="info-row"><span class="info-label">Joining Date</span><span class="info-value"
+                                id="dJoining">—</span></div>
+                        <div class="info-row"><span class="info-label">Status</span><span class="info-value"
+                                id="dStatus">—</span></div>
                     </div>
 
                     <!-- Salary Breakdown -->
                     <div class="detail-card">
                         <div class="detail-card-title"><span class="icon">💰</span> Salary Breakdown</div>
-                        <div class="info-row"><span class="info-label">Basic</span><span class="info-value" id="dBasic">₹0</span></div>
-                        <div class="info-row"><span class="info-label">HRA</span><span class="info-value" id="dHra">₹0</span></div>
-                        <div class="info-row"><span class="info-label">DA</span><span class="info-value" id="dDa">₹0</span></div>
-                        <div class="info-row"><span class="info-label">Allowance</span><span class="info-value" id="dAllow">₹0</span></div>
-                        <div class="info-row"><span class="info-label">PF</span><span class="info-value red" id="dPf">-₹0</span></div>
-                        <div class="info-row"><span class="info-label">Tax</span><span class="info-value red" id="dTax">-₹0</span></div>
+                        <div class="info-row"><span class="info-label">Basic</span><span class="info-value"
+                                id="dBasic">₹0</span></div>
+                        <div class="info-row"><span class="info-label">HRA</span><span class="info-value"
+                                id="dHra">₹0</span></div>
+                        <div class="info-row"><span class="info-label">DA</span><span class="info-value"
+                                id="dDa">₹0</span></div>
+                        <div class="info-row"><span class="info-label">Allowance</span><span class="info-value"
+                                id="dAllow">₹0</span></div>
+                        <div class="info-row"><span class="info-label">PF</span><span class="info-value red"
+                                id="dPf">-₹0</span></div>
+                        <div class="info-row"><span class="info-label">Tax</span><span class="info-value red"
+                                id="dTax">-₹0</span></div>
                         <div class="salary-total">
                             <span class="label">Gross Salary</span>
                             <span class="amount" id="dGross">₹0</span>
@@ -403,14 +454,18 @@
                             <span class="info-value" id="dCl">0 / 8</span>
                         </div>
                         <div class="leave-bar-wrap">
-                            <div class="leave-bar-track"><div class="leave-bar-fill safe" id="clBar" style="width:0%"></div></div>
+                            <div class="leave-bar-track">
+                                <div class="leave-bar-fill safe" id="clBar" style="width:0%"></div>
+                            </div>
                         </div>
                         <div class="info-row" style="margin-top:.5rem">
                             <span class="info-label">Medical Leave</span>
                             <span class="info-value" id="dMed">0 / 2</span>
                         </div>
                         <div class="leave-bar-wrap">
-                            <div class="leave-bar-track"><div class="leave-bar-fill safe" id="medBar" style="width:0%"></div></div>
+                            <div class="leave-bar-track">
+                                <div class="leave-bar-fill safe" id="medBar" style="width:0%"></div>
+                            </div>
                         </div>
                         <div class="info-row" style="margin-top:.5rem">
                             <span class="info-label">Personal Leave (Unpaid)</span>
@@ -429,15 +484,20 @@
                     <!-- Payroll Status -->
                     <div class="detail-card">
                         <div class="detail-card-title"><span class="icon">💸</span> Payroll Info</div>
-                        <div class="info-row"><span class="info-label">Deduction</span><span class="info-value red" id="dDeduction">₹0</span></div>
-                        <div class="info-row"><span class="info-label">Net Salary</span><span class="info-value" id="dNet">₹0</span></div>
+                        <div class="info-row"><span class="info-label">Deduction</span><span class="info-value red"
+                                id="dDeduction">₹0</span></div>
+                        <div class="info-row"><span class="info-label">Net Salary</span><span class="info-value"
+                                id="dNet">₹0</span></div>
                         <div class="info-row">
                             <span class="info-label">Payment Status</span>
                             <span id="dPayStatus"></span>
                         </div>
-                        <div class="info-row"><span class="info-label">Paid Date</span><span class="info-value" id="dPaidDate">—</span></div>
-                        <div class="info-row"><span class="info-label">Paid Time</span><span class="info-value" id="dPaidTime">—</span></div>
-                        <div class="salary-total" style="background:rgba(16,185,129,0.06);border-color:rgba(16,185,129,0.12)">
+                        <div class="info-row"><span class="info-label">Paid Date</span><span class="info-value"
+                                id="dPaidDate">—</span></div>
+                        <div class="info-row"><span class="info-label">Paid Time</span><span class="info-value"
+                                id="dPaidTime">—</span></div>
+                        <div class="salary-total"
+                            style="background:rgba(16,185,129,0.06);border-color:rgba(16,185,129,0.12)">
                             <span class="label">Final Salary</span>
                             <span class="amount" id="dFinal">₹0</span>
                         </div>
@@ -626,4 +686,5 @@
         }
     </script>
 </body>
+
 </html>

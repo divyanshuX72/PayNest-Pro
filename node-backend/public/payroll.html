@@ -26,7 +26,8 @@
             display: flex;
             flex-direction: column;
             gap: .3rem;
-            min-width: 0;          /* allow flex shrink */
+            min-width: 0;
+            /* allow flex shrink */
             overflow: hidden;
         }
 
@@ -42,7 +43,8 @@
         }
 
         .pstat-value {
-            font-size: clamp(.9rem, 1.3vw, 1.35rem);  /* scales down when space is tight */
+            font-size: clamp(.9rem, 1.3vw, 1.35rem);
+            /* scales down when space is tight */
             font-weight: 700;
             color: var(--text-bright);
             line-height: 1.2;
@@ -51,10 +53,21 @@
             text-overflow: ellipsis;
         }
 
-        .pstat-value.green  { color: var(--success); }
-        .pstat-value.red    { color: var(--danger);  }
-        .pstat-value.blue   { color: var(--primary); }
-        .pstat-value.yellow { color: var(--warning); }
+        .pstat-value.green {
+            color: var(--success);
+        }
+
+        .pstat-value.red {
+            color: var(--danger);
+        }
+
+        .pstat-value.blue {
+            color: var(--primary);
+        }
+
+        .pstat-value.yellow {
+            color: var(--warning);
+        }
 
         /* ── Toolbar ── */
         .payroll-toolbar {
@@ -100,7 +113,8 @@
             background: var(--glass-bg);
             color: var(--text-main);
             border: 1px solid var(--border);
-            padding: .55rem 2rem .55rem .85rem;   /* right gap for the chevron */
+            padding: .55rem 2rem .55rem .85rem;
+            /* right gap for the chevron */
             border-radius: 8px;
             font-size: .85rem;
             font-family: inherit;
@@ -328,23 +342,23 @@
                 <div class="filter-select-wrap">
                     <select class="filter-select" id="monthFilter" onchange="applyFilters()">
                         <option value="">All Months</option>
-                        <option>Jan</option>
-                        <option>Feb</option>
-                        <option>Mar</option>
-                        <option>Apr</option>
-                        <option>May</option>
-                        <option>Jun</option>
-                        <option>Jul</option>
-                        <option>Aug</option>
-                        <option>Sep</option>
-                        <option>Oct</option>
-                        <option>Nov</option>
-                        <option>Dec</option>
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
                     </select>
                 </div>
                 <div class="filter-select-wrap">
                     <select class="filter-select" id="qualFilter" onchange="applyFilters()">
-                        <option value="">All Qualifications</option>
+                        <option value="">All Sections</option>
                     </select>
                 </div>
                 <button class="btn btn-success" id="payAllBtn" onclick="payAllFiltered()"
@@ -387,7 +401,7 @@
                         <thead>
                             <tr>
                                 <th style="padding-left:1.25rem">Employee</th>
-                                <th>Qualification</th>
+                                <th>Section</th>
                                 <th>Month</th>
                                 <th>Final Salary</th>
                                 <th>Status</th>
@@ -478,6 +492,27 @@
 
         /* ── Date helpers ── */
         const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const MONTH_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+        // Smart month matching: "Aug" matches "August", "august", "Aug", etc.
+        function monthMatches(staffMonth, filterMonth) {
+            if (!staffMonth || !filterMonth) return false;
+            const s = staffMonth.trim().toLowerCase();
+            const f = filterMonth.trim().toLowerCase();
+            // Exact match
+            if (s === f) return true;
+            // Short matches full: "aug" startsWith from filter "august" or vice versa
+            if (s.startsWith(f.substring(0, 3)) || f.startsWith(s.substring(0, 3))) return true;
+            // Numeric month check (e.g. "8" or "08" for August)
+            const fIdx = MONTH_FULL.findIndex(m => m.toLowerCase() === f);
+            const sIdx = MONTH_FULL.findIndex(m => m.toLowerCase() === s);
+            if (fIdx >= 0 && fIdx === sIdx) return true;
+            // Short name of filter matches start of staff month
+            const fShort = MONTHS.find(m => m.toLowerCase() === f.substring(0, 3));
+            const sShort = s.substring(0, 3);
+            if (fShort && fShort.toLowerCase() === sShort) return true;
+            return false;
+        }
 
         function fmtDate(dateStr) {
             if (!dateStr) return null;
@@ -508,24 +543,24 @@
             const total = allStaff.length;
             const paid = allStaff.filter(s => s.payment_status === 'paid').length;
             const pending = total - paid;
-            const totalAmt  = allStaff.reduce((acc, s) => acc + (s.final_salary || 0), 0);
+            const totalAmt = allStaff.reduce((acc, s) => acc + (s.final_salary || 0), 0);
             const disbursed = allStaff.filter(s => s.payment_status === 'paid')
                 .reduce((acc, s) => acc + (s.final_salary || 0), 0);
             const remaining = totalAmt - disbursed;
 
-            document.getElementById('ps-total').textContent     = total;
-            document.getElementById('ps-payable').textContent   = inrFmt(totalAmt);
-            document.getElementById('ps-paid').textContent      = paid;
-            document.getElementById('ps-pending').textContent   = pending;
+            document.getElementById('ps-total').textContent = total;
+            document.getElementById('ps-payable').textContent = inrFmt(totalAmt);
+            document.getElementById('ps-paid').textContent = paid;
+            document.getElementById('ps-pending').textContent = pending;
             document.getElementById('ps-disbursed').textContent = inrFmt(disbursed);
             document.getElementById('ps-remaining').textContent = inrFmt(remaining);
         }
 
         /* ── Populate filters ── */
         function buildFilters() {
-            const quals = [...new Set(allStaff.map(s => s.qualification).filter(Boolean))].sort();
+            const sections = [...new Set(allStaff.map(s => s.section).filter(Boolean))].sort();
             const qualSel = document.getElementById('qualFilter');
-            quals.forEach(q => {
+            sections.forEach(q => {
                 const o = document.createElement('option');
                 o.value = q; o.textContent = q;
                 qualSel.appendChild(o);
@@ -576,7 +611,7 @@
                             <span class="eid">${s.employee_id || '#' + s.id}${s.role ? ' · ' + s.role : ''}</span>
                         </div>
                     </td>
-                    <td><span class="badge">${s.qualification || '—'}</span></td>
+                    <td><span class="badge">${s.section || '—'}</span></td>
                     <td style="color:var(--text-muted)">${s.month || '—'}</td>
                     <td style="font-weight:600;color:var(--text-bright)">₹${salary}</td>
                     <td>${statusBadge}</td>
@@ -599,11 +634,11 @@
                 (s.department || '').toLowerCase().includes(q) ||
                 (s.employee_id || '').toLowerCase().includes(q) ||
                 (s.role || '').toLowerCase().includes(q) ||
-                (s.qualification || '').toLowerCase().includes(q)
+                (s.section || '').toLowerCase().includes(q)
             );
             if (status) result = result.filter(s => (s.payment_status || 'pending') === status);
-            if (month) result = result.filter(s => (s.month || '') === month);
-            if (qual) result = result.filter(s => s.qualification === qual);
+            if (month) result = result.filter(s => monthMatches(s.month, month));
+            if (qual) result = result.filter(s => s.section === qual);
 
             currentFilteredList = result;
             const pendingCount = result.filter(s => s.payment_status !== 'paid').length;
@@ -623,8 +658,8 @@
             const pendingStaff = currentFilteredList.filter(s => s.payment_status !== 'paid');
             if (pendingStaff.length === 0) return;
             const ids = pendingStaff.map(s => s.id);
-            
-            document.getElementById('payAllDialogMsg').textContent = 
+
+            document.getElementById('payAllDialogMsg').textContent =
                 `Are you sure you want to mark ${ids.length} salaries as paid?`;
             document.getElementById('payAllDialog').classList.add('active');
         }

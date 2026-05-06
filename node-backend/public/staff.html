@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,10 +8,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-brand"><div class="brand-icon">💰</div><h2>PayNest Pro</h2></div>
+        <div class="sidebar-brand">
+            <div class="brand-icon">💰</div>
+            <h2>PayNest Pro</h2>
+        </div>
         <nav>
             <a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
             <a href="staff.html" class="active"><span class="nav-icon">👥</span> Staff Management</a>
@@ -27,21 +32,35 @@
                 <button class="hamburger" onclick="toggleSidebar()">☰</button>
                 <h1>Staff Management</h1>
             </div>
-            <button class="btn btn-sm" onclick="openModal()">+ Add Staff</button>
+            <div style="display:flex;gap:1rem">
+                <button class="btn btn-danger btn-sm" onclick="confirmDeleteAll()">🗑️ Delete All Data</button>
+                <button class="btn btn-sm" onclick="openModal()">+ Add Staff</button>
+            </div>
         </header>
 
         <div class="page-container">
             <div style="margin-bottom:1.5rem">
                 <div class="search-bar">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" placeholder="Search by ID, name, role, department, qualification..." oninput="filterStaff()">
+                    <input type="text" id="searchInput"
+                        placeholder="Search by ID, name, role, department, section..." oninput="filterStaff()">
                 </div>
             </div>
 
             <div class="card" id="staffCard">
                 <div id="skeletonLoader">
-                    <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
-                    <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+                    <div class="skeleton-row">
+                        <div class="skeleton"></div>
+                        <div class="skeleton"></div>
+                        <div class="skeleton"></div>
+                        <div class="skeleton"></div>
+                    </div>
+                    <div class="skeleton-row">
+                        <div class="skeleton"></div>
+                        <div class="skeleton"></div>
+                        <div class="skeleton"></div>
+                        <div class="skeleton"></div>
+                    </div>
                 </div>
                 <div id="emptyState" class="empty-state" style="display:none">
                     <span class="empty-icon">👥</span>
@@ -49,11 +68,21 @@
                 </div>
                 <div style="overflow-x:auto">
                     <table id="staffTable" style="display:none">
-                        <thead><tr>
-                            <th>ID</th><th>Name</th><th>Role</th><th>Dept</th><th>Qualification</th>
-                            <th>CL</th><th>Medical</th><th>Leaves</th>
-                            <th>Deduction</th><th>Final Salary</th><th>Actions</th>
-                        </tr></thead>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Role</th>
+                                <th>Dept</th>
+                                <th>Section</th>
+                                <th>CL</th>
+                                <th>Medical</th>
+                                <th>Leaves</th>
+                                <th>Deduction</th>
+                                <th>Final Salary</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -71,27 +100,93 @@
             <form id="staffForm">
                 <input type="hidden" id="staffId">
 
-                <p style="color:var(--primary);font-weight:600;font-size:.8rem;margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.05em">👤 Employee Info</p>
+                <p
+                    style="color:var(--primary);font-weight:600;font-size:.8rem;margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.05em">
+                    👤 Employee Info</p>
                 <div class="form-row">
-                    <div class="form-group"><label>Employee ID</label><input type="text" id="employee_id" placeholder="EMP-001"></div>
-                    <div class="form-group"><label>Name</label><input type="text" id="name" placeholder="Full name" required></div>
+                    <div class="form-group"><label>Employee ID</label><input type="text" id="employee_id"
+                            placeholder="EMP-001"></div>
+                    <div class="form-group"><label>Name</label><input type="text" id="name" placeholder="Full name"
+                            required></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label>Role</label><select id="role"><option value="">Select</option><option>Lecturer</option><option>Professor</option><option>Lab Assistant</option><option>Clerk</option><option>Admin</option><option>HOD</option><option>Peon</option></select></div>
-                    <div class="form-group"><label>Department</label><input type="text" id="department" placeholder="IT, Mechanical..." required></div>
+                    <div class="form-group"><label>Role</label>
+                        <div class="custom-select" id="roleSelectContainer">
+                            <div class="custom-select-trigger" id="roleSelectTrigger">Select</div>
+                            <div class="custom-options">
+                                <div class="custom-option" data-value="">Select</div>
+                                <div class="custom-option" data-value="Lecturer">Lecturer</div>
+                                <div class="custom-option" data-value="Professor">Professor</div>
+                                <div class="custom-option" data-value="Lab Assistant">Lab Assistant</div>
+                                <div class="custom-option" data-value="Clerk">Clerk</div>
+                                <div class="custom-option" data-value="Admin">Admin</div>
+                                <div class="custom-option" data-value="HOD">HOD</div>
+                                <div class="custom-option" data-value="Peon">Peon</div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="role" value="">
+                    </div>
+                    <div class="form-group"><label>Department</label><input type="text" id="department"
+                            placeholder="IT, Mechanical..." required></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label>Qualification</label><select id="qualification"><option value="">Select</option><option>Diploma</option><option>B.E</option><option>MCA</option><option>M.Tech</option></select></div>
+                    <div class="form-group">
+                        <label>Section</label>
+                        <div class="custom-select" id="sectionSelectContainer">
+                            <div class="custom-select-trigger" id="sectionSelectTrigger">Select Section</div>
+                            <div class="custom-options">
+                                <div class="custom-option" data-value="Diploma">Diploma</div>
+                                <div class="custom-option" data-value="B.E">B.E</div>
+                                <div class="custom-option" data-value="MCA">MCA</div>
+                                <div class="custom-option" data-value="M.Tech">M.Tech</div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="section" value="">
+                    </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group"><label>Joining Date</label><input type="date" id="joining_date"></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label>Status</label><select id="status"><option>Active</option><option>Inactive</option></select></div>
-                    <div class="form-group"><label>Month</label><select id="month"><option value="">Select</option><option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option><option>May</option><option>Jun</option><option>Jul</option><option>Aug</option><option>Sep</option><option>Oct</option><option>Nov</option><option>Dec</option></select></div>
+                    <div class="form-group"><label>Status</label>
+                        <div class="custom-select" id="statusSelectContainer">
+                            <div class="custom-select-trigger" id="statusSelectTrigger">Active</div>
+                            <div class="custom-options">
+                                <div class="custom-option" data-value="Active">Active</div>
+                                <div class="custom-option" data-value="Inactive">Inactive</div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="status" value="Active">
+                    </div>
+                    <div class="form-group"><label>Month</label>
+                        <div class="custom-select" id="monthSelectContainer">
+                            <div class="custom-select-trigger" id="monthSelectTrigger">Select</div>
+                            <div class="custom-options" style="max-height: none; display: grid; grid-template-columns: 1fr 1fr;">
+                                <div class="custom-option" style="grid-column: 1 / -1; border-bottom: 1px solid #334155; margin-bottom: 4px;" data-value="">Select</div>
+                                <div class="custom-option" data-value="January">January</div>
+                                <div class="custom-option" data-value="February">February</div>
+                                <div class="custom-option" data-value="March">March</div>
+                                <div class="custom-option" data-value="April">April</div>
+                                <div class="custom-option" data-value="May">May</div>
+                                <div class="custom-option" data-value="June">June</div>
+                                <div class="custom-option" data-value="July">July</div>
+                                <div class="custom-option" data-value="August">August</div>
+                                <div class="custom-option" data-value="September">September</div>
+                                <div class="custom-option" data-value="October">October</div>
+                                <div class="custom-option" data-value="November">November</div>
+                                <div class="custom-option" data-value="December">December</div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="month" value="">
+                    </div>
                 </div>
 
-                <p style="color:var(--success);font-weight:600;font-size:.8rem;margin:1rem 0 .75rem;text-transform:uppercase;letter-spacing:.05em">💰 Salary Components</p>
+                <p
+                    style="color:var(--success);font-weight:600;font-size:.8rem;margin:1rem 0 .75rem;text-transform:uppercase;letter-spacing:.05em">
+                    💰 Salary Components</p>
                 <div class="form-row">
-                    <div class="form-group"><label>Basic</label><input type="number" id="basic" placeholder="0" required></div>
+                    <div class="form-group"><label>Basic</label><input type="number" id="basic" placeholder="0"
+                            required></div>
                     <div class="form-group"><label>HRA</label><input type="number" id="hra" value="0"></div>
                 </div>
                 <div class="form-row">
@@ -103,19 +198,27 @@
                     <div class="form-group"><label>Tax</label><input type="number" id="tax" value="0"></div>
                 </div>
 
-                <p style="color:var(--warning);font-weight:600;font-size:.8rem;margin:1rem 0 .75rem;text-transform:uppercase;letter-spacing:.05em">📋 Attendance & Leave</p>
+                <p
+                    style="color:var(--warning);font-weight:600;font-size:.8rem;margin:1rem 0 .75rem;text-transform:uppercase;letter-spacing:.05em">
+                    📋 Attendance & Leave</p>
                 <div class="form-row">
-                    <div class="form-group"><label>Working Days</label><input type="number" id="working_days" value="30" min="1" max="31"></div>
-                    <div class="form-group"><label>CL Taken</label><input type="number" id="cl_taken" value="0" min="0"></div>
+                    <div class="form-group"><label>Working Days</label><input type="number" id="working_days" value="30"
+                            min="1" max="31"></div>
+                    <div class="form-group"><label>CL Taken</label><input type="number" id="cl_taken" value="0" min="0">
+                    </div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label>Medical Taken</label><input type="number" id="medical_taken" value="0" min="0"></div>
-                    <div class="form-group"><label>Personal Leave</label><input type="number" id="personal_leave" value="0" min="0"></div>
+                    <div class="form-group"><label>Medical Taken</label><input type="number" id="medical_taken"
+                            value="0" min="0"></div>
+                    <div class="form-group"><label>Personal Leave</label><input type="number" id="personal_leave"
+                            value="0" min="0"></div>
                 </div>
                 <div style="display:flex;gap:.5rem;margin-bottom:.5rem">
                     <span class="badge-processed" style="font-size:.72rem">CL Quota: 8/6mo</span>
                     <span class="badge-pending" style="font-size:.72rem">Medical Quota: 2/6mo</span>
-                    <span style="background:rgba(239,68,68,0.12);color:var(--danger);padding:.2rem .6rem;border-radius:20px;font-size:.72rem;font-weight:600">Personal = Unpaid</span>
+                    <span
+                        style="background:rgba(239,68,68,0.12);color:var(--danger);padding:.2rem .6rem;border-radius:20px;font-size:.72rem;font-weight:600">Personal
+                        = Unpaid</span>
                 </div>
 
                 <button type="submit" class="btn btn-full" style="margin-top:1rem">Save Staff</button>
@@ -127,8 +230,8 @@
     <div id="confirmDialog" class="confirm-dialog">
         <div class="confirm-box">
             <span class="confirm-icon">⚠️</span>
-            <h3>Delete Staff Member?</h3>
-            <p>This action cannot be undone.</p>
+            <h3 id="confirmTitle">Delete Staff Member?</h3>
+            <p id="confirmMessage">This action cannot be undone.</p>
             <div class="confirm-actions">
                 <button class="btn btn-secondary" onclick="closeConfirm()">Cancel</button>
                 <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
@@ -143,10 +246,10 @@
         if (!token) window.location.href = '/login.html';
         let allStaff = [], deleteId = null;
 
-        function logout(){localStorage.removeItem('token');window.location.href='/login.html'}
-        function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('active')}
-        function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('active')}
-        function showToast(msg,type='info'){const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className='toast toast-'+type;t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),3500)}
+        function logout() { localStorage.removeItem('token'); window.location.href = '/login.html' }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('active') }
+        function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('active') }
+        function showToast(msg, type = 'info') { const c = document.getElementById('toastContainer'); const t = document.createElement('div'); t.className = 'toast toast-' + type; t.textContent = msg; c.appendChild(t); setTimeout(() => t.remove(), 3500) }
 
         function leaveTag(used, quota) {
             const rem = quota - used;
@@ -155,30 +258,30 @@
             return `<span style="background:rgba(239,68,68,0.12);color:var(--danger);padding:.2rem .6rem;border-radius:20px;font-size:.7rem;font-weight:600">${used}/${quota} ❌</span>`;
         }
 
-        async function loadStaff(){
-            try{const res=await fetch('/api/staff',{headers:{'Authorization':'Bearer '+token}});allStaff=await res.json();renderStaff(allStaff)}catch(e){showToast('Failed to load','error')}
+        async function loadStaff() {
+            try { const res = await fetch('/api/staff', { headers: { 'Authorization': 'Bearer ' + token } }); allStaff = await res.json(); renderStaff(allStaff) } catch (e) { showToast('Failed to load', 'error') }
         }
 
-        function renderStaff(list){
-            document.getElementById('skeletonLoader').style.display='none';
-            const table=document.getElementById('staffTable');
-            const empty=document.getElementById('emptyState');
-            if(!list.length){table.style.display='none';empty.style.display='block';return}
-            table.style.display='table';empty.style.display='none';
-            table.querySelector('tbody').innerHTML=list.map(s=>{
-                const ded=s.deduction||0;
-                const totalPL=s.personal_leave||0;
+        function renderStaff(list) {
+            document.getElementById('skeletonLoader').style.display = 'none';
+            const table = document.getElementById('staffTable');
+            const empty = document.getElementById('emptyState');
+            if (!list.length) { table.style.display = 'none'; empty.style.display = 'block'; return }
+            table.style.display = 'table'; empty.style.display = 'none';
+            table.querySelector('tbody').innerHTML = list.map(s => {
+                const ded = s.deduction || 0;
+                const totalPL = s.personal_leave || 0;
                 return `<tr>
-                    <td style="color:var(--text-muted);font-size:.8rem">${s.employee_id||s.id}</td>
+                    <td style="color:var(--text-muted);font-size:.8rem">${s.employee_id || s.id}</td>
                     <td><a href="staff_detail.html?id=${s.id}" style="color:var(--text-bright);text-decoration:none;font-weight:600" onmouseover="this.style.color='var(--primary)';this.style.textDecoration='underline'" onmouseout="this.style.color='var(--text-bright)';this.style.textDecoration='none'">${s.name}</a></td>
-                    <td style="color:var(--text-muted)">${s.role||'-'}</td>
+                    <td style="color:var(--text-muted)">${s.role || '-'}</td>
                     <td><span class="badge">${s.department}</span></td>
-                    <td>${s.qualification||'-'}</td>
-                    <td>${leaveTag(s.cl_used||0, s.cl_quota||8)}</td>
-                    <td>${leaveTag(s.medical_used||0, s.medical_quota||2)}</td>
-                    <td>${totalPL>0?'<span style="color:var(--danger)">'+totalPL+'</span>':'0'}</td>
-                    <td style="color:var(--danger);font-weight:600">${ded>0?'-₹'+ded.toLocaleString():'₹0'}</td>
-                    <td><strong style="color:var(--success)">₹${(s.final_salary||0).toLocaleString()}</strong></td>
+                    <td>${s.section || '-'}</td>
+                    <td>${leaveTag(s.cl_used || 0, s.cl_quota || 8)}</td>
+                    <td>${leaveTag(s.medical_used || 0, s.medical_quota || 2)}</td>
+                    <td>${totalPL > 0 ? '<span style="color:var(--danger)">' + totalPL + '</span>' : '0'}</td>
+                    <td style="color:var(--danger);font-weight:600">${ded > 0 ? '-₹' + ded.toLocaleString() : '₹0'}</td>
+                    <td><strong style="color:var(--success)">₹${(s.final_salary || 0).toLocaleString()}</strong></td>
                     <td style="white-space:nowrap">
                         <button class="btn btn-secondary btn-sm" onclick='editStaff(${JSON.stringify(s)})'>✏️</button>
                         <button class="btn btn-danger btn-sm" onclick="confirmDelete(${s.id})">🗑️</button>
@@ -186,80 +289,177 @@
                 </tr>`}).join('');
         }
 
-        function filterStaff(){
-            const q=document.getElementById('searchInput').value.toLowerCase();
-            renderStaff(allStaff.filter(s=>s.name.toLowerCase().includes(q)||s.department.toLowerCase().includes(q)||(s.role||'').toLowerCase().includes(q)||(s.employee_id||'').toLowerCase().includes(q)||(s.qualification||'').toLowerCase().includes(q)));
+        function filterStaff() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            renderStaff(allStaff.filter(s => s.name.toLowerCase().includes(q) || s.department.toLowerCase().includes(q) || (s.role || '').toLowerCase().includes(q) || (s.employee_id || '').toLowerCase().includes(q) || (s.section || '').toLowerCase().includes(q)));
         }
 
-        function openModal(){
+        function openModal() {
             document.getElementById('staffForm').reset();
-            document.getElementById('staffId').value='';
-            document.getElementById('employee_id').value='';
-            document.getElementById('working_days').value='30';
-            document.getElementById('status').value='Active';
-            document.getElementById('modalTitle').textContent='Add Staff';
+            document.getElementById('staffId').value = '';
+            document.getElementById('employee_id').value = '';
+            document.getElementById('working_days').value = '30';
+            document.getElementById('modalTitle').textContent = 'Add Staff';
+            
+            function resetCustomSelect(id, val, defaultText) {
+                const hidden = document.getElementById(id);
+                if(hidden) hidden.value = val;
+                const trigger = document.getElementById(id + 'SelectTrigger');
+                if(trigger) trigger.textContent = val === '' ? defaultText : val;
+                const container = document.getElementById(id + 'SelectContainer');
+                if(container) {
+                    container.querySelectorAll('.custom-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                        if (opt.getAttribute('data-value') === val) opt.classList.add('selected');
+                    });
+                }
+            }
+            
+            resetCustomSelect('role', '', 'Select');
+            resetCustomSelect('section', '', 'Select Section');
+            resetCustomSelect('status', 'Active', 'Active');
+            resetCustomSelect('month', '', 'Select');
+            
             document.getElementById('staffModal').classList.add('active');
         }
-        function closeModal(){document.getElementById('staffModal').classList.remove('active')}
+        function closeModal() { document.getElementById('staffModal').classList.remove('active') }
 
-        function editStaff(s){
-            document.getElementById('staffId').value=s.id;
-            document.getElementById('employee_id').value=s.employee_id||'';
-            document.getElementById('name').value=s.name;
-            document.getElementById('role').value=s.role||'';
-            document.getElementById('department').value=s.department;
-            document.getElementById('qualification').value=s.qualification||'';
-            document.getElementById('joining_date').value=s.joining_date?s.joining_date.split('T')[0]:'';
-            document.getElementById('status').value=s.status||'Active';
-            document.getElementById('month').value=s.month||'';
-            document.getElementById('working_days').value=s.working_days||30;
-            document.getElementById('basic').value=s.basic;
-            document.getElementById('hra').value=s.hra;
-            document.getElementById('da').value=s.da;
-            document.getElementById('allowance').value=s.allowance;
-            document.getElementById('pf').value=s.pf;
-            document.getElementById('tax').value=s.tax;
-            document.getElementById('cl_taken').value=s.cl_taken||0;
-            document.getElementById('medical_taken').value=s.medical_taken||0;
-            document.getElementById('personal_leave').value=s.personal_leave||0;
-            document.getElementById('modalTitle').textContent='Edit Staff';
+        function editStaff(s) {
+            document.getElementById('staffId').value = s.id;
+            document.getElementById('employee_id').value = s.employee_id || '';
+            document.getElementById('name').value = s.name;
+            document.getElementById('department').value = s.department;
+            document.getElementById('joining_date').value = s.joining_date ? s.joining_date.split('T')[0] : '';
+            
+            function setCustomSelect(id, val, defaultText) {
+                const hidden = document.getElementById(id);
+                if(hidden) hidden.value = val;
+                const trigger = document.getElementById(id + 'SelectTrigger');
+                if(trigger) trigger.textContent = val === '' ? defaultText : val;
+                const container = document.getElementById(id + 'SelectContainer');
+                if(container) {
+                    container.querySelectorAll('.custom-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                        if (opt.getAttribute('data-value') === val) opt.classList.add('selected');
+                    });
+                }
+            }
+            
+            setCustomSelect('role', s.role || '', 'Select');
+            setCustomSelect('section', s.section || '', 'Select Section');
+            setCustomSelect('status', s.status || 'Active', 'Active');
+            setCustomSelect('month', s.month || '', 'Select');
+            document.getElementById('working_days').value = s.working_days || 30;
+            document.getElementById('basic').value = s.basic;
+            document.getElementById('hra').value = s.hra;
+            document.getElementById('da').value = s.da;
+            document.getElementById('allowance').value = s.allowance;
+            document.getElementById('pf').value = s.pf;
+            document.getElementById('tax').value = s.tax;
+            document.getElementById('cl_taken').value = s.cl_taken || 0;
+            document.getElementById('medical_taken').value = s.medical_taken || 0;
+            document.getElementById('personal_leave').value = s.personal_leave || 0;
+            document.getElementById('modalTitle').textContent = 'Edit Staff';
             document.getElementById('staffModal').classList.add('active');
         }
 
-        document.getElementById('staffForm').addEventListener('submit',async(e)=>{
+        document.getElementById('staffForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id=document.getElementById('staffId').value;
-            const data={
-                employee_id:document.getElementById('employee_id').value,
-                name:document.getElementById('name').value,
-                role:document.getElementById('role').value,
-                department:document.getElementById('department').value,
-                qualification:document.getElementById('qualification').value,
-                joining_date:document.getElementById('joining_date').value||null,
-                status:document.getElementById('status').value,
-                month:document.getElementById('month').value,
-                working_days:document.getElementById('working_days').value,
-                basic:document.getElementById('basic').value,
-                hra:document.getElementById('hra').value,
-                da:document.getElementById('da').value,
-                allowance:document.getElementById('allowance').value,
-                pf:document.getElementById('pf').value,
-                tax:document.getElementById('tax').value,
-                cl_taken:document.getElementById('cl_taken').value,
-                medical_taken:document.getElementById('medical_taken').value,
-                personal_leave:document.getElementById('personal_leave').value
+            const id = document.getElementById('staffId').value;
+            const data = {
+                employee_id: document.getElementById('employee_id').value,
+                name: document.getElementById('name').value,
+                role: document.getElementById('role').value,
+                department: document.getElementById('department').value,
+                section: document.getElementById('section').value,
+                joining_date: document.getElementById('joining_date').value || null,
+                status: document.getElementById('status').value,
+                month: document.getElementById('month').value,
+                working_days: document.getElementById('working_days').value,
+                basic: document.getElementById('basic').value,
+                hra: document.getElementById('hra').value,
+                da: document.getElementById('da').value,
+                allowance: document.getElementById('allowance').value,
+                pf: document.getElementById('pf').value,
+                tax: document.getElementById('tax').value,
+                cl_taken: document.getElementById('cl_taken').value,
+                medical_taken: document.getElementById('medical_taken').value,
+                personal_leave: document.getElementById('personal_leave').value
             };
-            try{
-                await fetch(id?'/api/staff/'+id:'/api/staff',{method:id?'PUT':'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(data)});
-                showToast(id?'Staff updated!':'Staff added!','success');closeModal();loadStaff();
-            }catch(e){showToast('Save failed','error')}
+            try {
+                await fetch(id ? '/api/staff/' + id : '/api/staff', { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(data) });
+                showToast(id ? 'Staff updated!' : 'Staff added!', 'success'); closeModal(); loadStaff();
+            } catch (e) { showToast('Save failed', 'error') }
         });
 
-        function confirmDelete(id){deleteId=id;document.getElementById('confirmDialog').classList.add('active')}
-        function closeConfirm(){document.getElementById('confirmDialog').classList.remove('active');deleteId=null}
-        document.getElementById('confirmDeleteBtn').addEventListener('click',async()=>{
-            if(!deleteId)return;
-            try{await fetch('/api/staff/'+deleteId,{method:'DELETE',headers:{'Authorization':'Bearer '+token}});showToast('Deleted','success');closeConfirm();loadStaff()}catch(e){showToast('Failed','error')}
+        function confirmDelete(id) { 
+            deleteId = id; 
+            document.getElementById('confirmTitle').textContent = 'Delete Staff Member?';
+            document.getElementById('confirmMessage').textContent = 'This action cannot be undone.';
+            document.getElementById('confirmDialog').classList.add('active'); 
+        }
+        function confirmDeleteAll() {
+            deleteId = 'all';
+            document.getElementById('confirmTitle').textContent = 'Delete ALL Staff Data?';
+            document.getElementById('confirmMessage').textContent = 'Are you sure? This will delete all staff records permanently and cannot be undone!';
+            document.getElementById('confirmDialog').classList.add('active');
+        }
+        function closeConfirm() { document.getElementById('confirmDialog').classList.remove('active'); deleteId = null }
+        
+        document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+            if (!deleteId) return;
+            try { 
+                if (deleteId === 'all') {
+                    await fetch('/api/staff/all', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } }); 
+                    showToast('All Staff Data Deleted', 'success'); 
+                } else {
+                    await fetch('/api/staff/' + deleteId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } }); 
+                    showToast('Deleted', 'success'); 
+                }
+                closeConfirm(); 
+                loadStaff(); 
+            } catch (e) { showToast('Failed', 'error') }
+        });
+
+        // Universal Custom Select Logic
+        function setupCustomSelect(selectId) {
+            const container = document.getElementById(selectId + 'SelectContainer');
+            if(!container) return;
+            const trigger = document.getElementById(selectId + 'SelectTrigger');
+            const hiddenInput = document.getElementById(selectId);
+            
+            trigger.addEventListener('click', (e) => {
+                document.querySelectorAll('.custom-select.open').forEach(el => {
+                    if (el !== container) el.classList.remove('open');
+                });
+                container.classList.toggle('open');
+                e.stopPropagation();
+            });
+
+            container.querySelectorAll('.custom-option').forEach(option => {
+                option.addEventListener('click', (e) => {
+                    const val = e.target.getAttribute('data-value');
+                    const text = e.target.textContent;
+                    trigger.textContent = text;
+                    hiddenInput.value = val;
+                    container.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                    container.classList.remove('open');
+                });
+            });
+        }
+        
+        setupCustomSelect('section');
+        setupCustomSelect('role');
+        setupCustomSelect('status');
+        setupCustomSelect('month');
+
+        document.addEventListener('click', (e) => {
+            document.querySelectorAll('.custom-select').forEach(container => {
+                if (!container.contains(e.target)) {
+                    container.classList.remove('open');
+                }
+            });
         });
 
         loadStaff().then(() => {
@@ -271,4 +471,5 @@
         });
     </script>
 </body>
+
 </html>

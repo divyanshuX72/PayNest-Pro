@@ -10,35 +10,79 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         /* Page-specific styles only — base styles come from style.css */
-        .import-export-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
-        @media(min-width: 900px) {
-            .import-export-grid { grid-template-columns: 1fr 1fr; }
+        .import-export-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
         }
 
-        .preview-table { font-size: 0.75rem; width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        .preview-table th, .preview-table td { padding: 0.5rem; text-align: left; }
-        .preview-table th { background: rgba(0,0,0,0.2); }
+        @media(min-width: 900px) {
+            .import-export-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .preview-table {
+            font-size: 0.75rem;
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .preview-table th,
+        .preview-table td {
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .preview-table th {
+            background: rgba(0, 0, 0, 0.2);
+        }
 
         /* Drop icon — minimal outline SVG */
         .drop-icon-wrap {
-            width: 40px; height: 40px; margin: 0 auto 0.75rem;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(148,163,184,0.08); border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(148, 163, 184, 0.08);
+            border-radius: 10px;
         }
-        .drop-icon-wrap svg { width: 22px; height: 22px; color: var(--text-muted); stroke: currentColor; }
+
+        .drop-icon-wrap svg {
+            width: 22px;
+            height: 22px;
+            color: var(--text-muted);
+            stroke: currentColor;
+        }
 
         /* File preview override */
         .file-icon-wrap {
-            width: 36px; height: 36px; border-radius: 8px;
-            background: rgba(59,130,246,0.1);
-            display: flex; align-items: center; justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(59, 130, 246, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .file-icon-wrap svg { width: 18px; height: 18px; color: var(--primary); stroke: currentColor; }
+
+        .file-icon-wrap svg {
+            width: 18px;
+            height: 18px;
+            color: var(--primary);
+            stroke: currentColor;
+        }
 
         .section-label {
-            font-size: 0.7rem; text-transform: uppercase;
-            letter-spacing: 0.06em; color: var(--text-muted);
-            font-weight: 600; margin-bottom: 0.5rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
         }
     </style>
 </head>
@@ -72,13 +116,26 @@
 
             <!-- TEMPLATE FORMAT CARD -->
             <div class="card" style="margin-bottom:1.5rem">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:1rem">
+                <div
+                    style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:1rem">
                     <div style="display:flex;align-items:center;gap:0.6rem">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                            <polyline points="10 9 9 9 8 9" />
+                        </svg>
                         <h3 style="margin:0">Excel Template Format</h3>
                     </div>
                     <button class="btn btn-success btn-sm" onclick="downloadTemplate()">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
                         Download Template
                     </button>
                 </div>
@@ -94,7 +151,6 @@
                                 <th>Role</th>
                                 <th>Department</th>
                                 <th>Section</th>
-                                <th>Level</th>
                                 <th>Month</th>
                                 <th>Basic</th>
                                 <th>HRA</th>
@@ -115,7 +171,6 @@
                                 <td>Lecturer</td>
                                 <td>IT</td>
                                 <td>Software</td>
-                                <td>L1</td>
                                 <td>May</td>
                                 <td>20000</td>
                                 <td>5000</td>
@@ -137,14 +192,24 @@
                 <!-- EXPORT CARD -->
                 <div class="card">
                     <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
                         <h3 style="margin:0">Export Staff Data</h3>
                     </div>
                     <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:1.5rem;line-height:1.5">
                         Download all staff records in Excel format. Includes salary, leave, and staff details.
                     </p>
                     <button class="btn btn-full" id="exportBtn" onclick="exportData()">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
                         Download Excel
                     </button>
                 </div>
@@ -152,16 +217,26 @@
                 <!-- IMPORT CARD -->
                 <div class="card">
                     <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
                         <h3 style="margin:0">Import Staff Data</h3>
                     </div>
                     <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:1rem;line-height:1.5">
-                        Upload Excel file (.xlsx / .xls) to bulk import staff data. Duplicates are skipped automatically.
+                        Upload Excel file (.xlsx / .xls) to bulk import staff data. Duplicates are skipped
+                        automatically.
                     </p>
 
                     <div class="dropzone" id="dropzone">
                         <div class="drop-icon-wrap">
-                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                            </svg>
                         </div>
                         <div class="drop-text">Drop your Excel file here or <span>click to upload</span></div>
                         <input type="file" id="excelFile" accept=".xlsx,.xls">
@@ -169,13 +244,18 @@
 
                     <div class="file-preview" id="filePreview">
                         <div class="file-icon-wrap">
-                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                            </svg>
                         </div>
                         <div class="file-info">
                             <div class="file-name" id="fileName"></div>
                             <div class="file-size" id="fileSize"></div>
                         </div>
-                        <button class="file-remove" onclick="removeFile()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1rem;padding:4px">✕</button>
+                        <button class="file-remove" onclick="removeFile()"
+                            style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1rem;padding:4px">✕</button>
                     </div>
 
                     <!-- PREVIEW SECTION -->
@@ -195,8 +275,14 @@
                         <div class="progress-fill" id="progressFill"></div>
                     </div>
 
-                    <button class="btn btn-success btn-full" id="uploadBtn" onclick="uploadFile()" style="margin-top:1.5rem" disabled>
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <button class="btn btn-success btn-full" id="uploadBtn" onclick="uploadFile()"
+                        style="margin-top:1.5rem" disabled>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
                         <span class="btn-text">Upload File</span>
                         <span class="spinner"></span>
                     </button>
@@ -225,19 +311,27 @@
         }
 
         // --- DOWNLOAD TEMPLATE ---
-        function downloadTemplate() {
-            const headers = ['ID', 'Name', 'Role', 'Department', 'Section', 'Level', 'Month', 'Basic', 'HRA', 'DA', 'Allowance', 'PF', 'Tax', 'WorkingDays', 'CL_used', 'Medical_used', 'Personal_leave'];
-            const sample = [
-                [101, 'Rahul Sharma', 'Lecturer', 'IT', 'Software', 'L1', 'May', 20000, 5000, 3000, 2000, 1500, 1000, 30, 1, 0, 0],
-                [102, 'Amit Kumar', 'Lab Assistant', 'Mechanical', 'Workshop', 'L2', 'May', 18000, 4000, 2500, 1500, 1200, 800, 30, 2, 0, 1],
-            ];
-            const data = [headers, ...sample];
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            ws['!cols'] = headers.map(h => ({ wch: Math.max(h.length + 2, 12) }));
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Staff Template');
-            XLSX.writeFile(wb, 'PayNest_Import_Template.xlsx');
-            showToast('Template downloaded!', 'success');
+        async function downloadTemplate() {
+            try {
+                const res = await fetch('/api/upload/template', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    showToast(err.error || 'Failed to download template', 'error');
+                    return;
+                }
+                const blob = await res.blob();
+                const url  = URL.createObjectURL(blob);
+                const a    = document.createElement('a');
+                a.href     = url;
+                a.download = 'PayNest_Import_Template.xlsx';
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('✅ Template downloaded!', 'success');
+            } catch (e) {
+                showToast('Download failed. Check server.', 'error');
+            }
         }
 
         // --- EXPORT DATA ---

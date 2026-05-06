@@ -232,24 +232,24 @@
             <div class="toolbar">
                 <div class="search-bar">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" placeholder="Search by ID, name, role, department, qualification..."
-                        oninput="filterSalary()">
+                    <input type="text" id="searchInput"
+                        placeholder="Search by ID, name, role, department, section..." oninput="filterSalary()">
                 </div>
                 <div class="month-filter">
                     <select id="monthFilter" onchange="filterSalary()">
                         <option value="">All Months</option>
-                        <option>Jan</option>
-                        <option>Feb</option>
-                        <option>Mar</option>
-                        <option>Apr</option>
-                        <option>May</option>
-                        <option>Jun</option>
-                        <option>Jul</option>
-                        <option>Aug</option>
-                        <option>Sep</option>
-                        <option>Oct</option>
-                        <option>Nov</option>
-                        <option>Dec</option>
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
                     </select>
                 </div>
             </div>
@@ -286,7 +286,7 @@
                             <tr>
                                 <th>Employee</th>
                                 <th>Role</th>
-                                <th>Qualification</th>
+                                <th>Section</th>
                                 <th>Gross</th>
                                 <th>Leaves</th>
                                 <th>Deductions</th>
@@ -312,6 +312,25 @@
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('active') }
         function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('active') }
         function showToast(msg, type = 'info') { const c = document.getElementById('toastContainer'); const t = document.createElement('div'); t.className = 'toast toast-' + type; t.textContent = msg; c.appendChild(t); setTimeout(() => t.remove(), 3500) }
+
+        const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+        // Smart month matching: "Aug" matches "August", "august", "Mar" matches "March", etc.
+        function monthMatches(staffMonth, filterMonth) {
+            if (!staffMonth || !filterMonth) return false;
+            const s = staffMonth.trim().toLowerCase();
+            const f = filterMonth.trim().toLowerCase();
+            if (s === f) return true;
+            if (s.startsWith(f.substring(0, 3)) || f.startsWith(s.substring(0, 3))) return true;
+            const fIdx = MONTHS_FULL.findIndex(m => m.toLowerCase() === f);
+            const sIdx = MONTHS_FULL.findIndex(m => m.toLowerCase() === s);
+            if (fIdx >= 0 && fIdx === sIdx) return true;
+            const fShort = MONTHS_SHORT.find(m => m.toLowerCase() === f.substring(0, 3));
+            const sShort = s.substring(0, 3);
+            if (fShort && fShort.toLowerCase() === sShort) return true;
+            return false;
+        }
 
         async function loadSalaryData() {
             try {
@@ -382,7 +401,7 @@
                         </div>
                     </td>
                     <td style="color:var(--text-muted)">${s.role || '-'}</td>
-                    <td><span class="badge">${s.qualification || '—'}</span></td>
+                    <td><span class="badge">${s.section || '—'}</span></td>
                     <td style="font-weight:600">${inrFmt(gross)}</td>
                     <td>${leaveHtml}</td>
                     <td>${dedHtml}</td>
@@ -402,7 +421,7 @@
                 (s.employee_id || '').toLowerCase().includes(q) ||
                 (s.qualification || '').toLowerCase().includes(q)
             );
-            if (month) filtered = filtered.filter(s => (s.month || '') === month);
+            if (month) filtered = filtered.filter(s => monthMatches(s.month, month));
             renderSalary(filtered);
         }
 

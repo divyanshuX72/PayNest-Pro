@@ -46,25 +46,33 @@
 
             <!-- SECTION 1: TOP SUMMARY CARDS -->
             <div class="dashboard-grid">
-                <div class="stat-card">
+                <div class="stat-card" onclick="window.location.href='staff.html'">
+                    <span class="stat-arrow">↗</span>
                     <div class="stat-icon">👥</div>
                     <div class="stat-label">Total Staff</div>
                     <div class="stat-value" id="totalStaff">0</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" onclick="window.location.href='payroll.html'">
+                    <span class="stat-arrow">↗</span>
                     <div class="stat-icon">💰</div>
                     <div class="stat-label">Total Salary</div>
                     <div class="stat-value" id="totalPayout">₹0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon">🏢</div>
-                    <div class="stat-label">Departments</div>
-                    <div class="stat-value" id="totalDeps">0</div>
+                    <span class="stat-arrow">↗</span>
+                    <div class="stat-icon" style="color:var(--success); background:rgba(16,185,129,0.15)">✅</div>
+                    <div class="stat-label">ATTENDANCE RATE</div>
+                    <div class="stat-value" id="attendanceRate">0%</div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">Overall staff attendance</div>
+                    <div style="width:100%; height:4px; background:var(--glass-border); border-radius:2px; margin-top:0.5rem; overflow:hidden;">
+                        <div id="attendanceProgress" style="width:0%; height:100%; background:var(--success); border-radius:2px; transition:width 1s ease;"></div>
+                    </div>
                 </div>
-                <div class="stat-card" style="overflow:hidden">
+                <div class="stat-card" style="overflow:hidden" onclick="window.location.href='payroll.html?status=pending'">
                     <div
                         style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#ec4899,#f43f5e);border-radius:12px 12px 0 0">
                     </div>
+                    <span class="stat-arrow">↗</span>
                     <div class="stat-icon" style="background:rgba(236,72,153,0.15);color:#ec4899">📋</div>
                     <div class="stat-label">Pending Payroll</div>
                     <div class="stat-value" id="pendingPayroll">0 <span
@@ -75,15 +83,20 @@
             <!-- SECTION 2: CHARTS (side by side) -->
             <div class="charts-grid">
                 <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Salary Breakdown</h3>
-                        <span>Average Components</span>
+                    <div class="chart-header" style="align-items: flex-start;">
+                        <div>
+                            <h3>Monthly Salary Trend</h3>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Salary payout analytics over time</span>
+                        </div>
+                        <div id="trendIndicator" style="font-size: 0.85rem; font-weight: 500;"></div>
                     </div>
-                    <canvas id="salaryChart" style="max-height:280px"></canvas>
+                    <div style="height: 280px; width: 100%; position: relative;">
+                        <canvas id="salaryChart"></canvas>
+                    </div>
                 </div>
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3>Qualification Distribution</h3>
+                        <h3>Section Distribution</h3>
                         <span>By Salary %</span>
                     </div>
                     <canvas id="deptChart" style="max-height:280px"></canvas>
@@ -162,13 +175,14 @@
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('active'); }
         function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('active'); }
 
-        function animateCount(el, target, prefix = '', duration = 1200) {
+        function animateCount(el, target, prefix = '', suffix = '', duration = 1200) {
             let start = 0;
             const step = target / (duration / 16);
+            if (target === 0) { el.textContent = prefix + '0' + suffix; return; }
             const timer = setInterval(() => {
                 start += step;
                 if (start >= target) { start = target; clearInterval(timer); }
-                el.textContent = prefix + Math.floor(start).toLocaleString();
+                el.textContent = prefix + Math.floor(start).toLocaleString() + suffix;
             }, 16);
         }
 
@@ -177,60 +191,170 @@
 
         async function loadDashboard() {
             try {
-                // 1. Dashboard stats
+                // 1. Dashboard stats (includes section distribution & salary breakdown)
                 const statsRes = await fetch('/api/staff/dashboard', { headers: { 'Authorization': 'Bearer ' + token } });
                 const stats = await statsRes.json();
                 if (statsRes.ok) {
                     animateCount(document.getElementById('totalStaff'), stats.totalStaff);
                     animateCount(document.getElementById('totalPayout'), stats.totalPayout || 0, '₹');
-                    animateCount(document.getElementById('totalDeps'), stats.totalDepartments);
                 }
 
-                // 2. Load all staff for charts + table
+                // Pending payroll
+                document.getElementById('pendingPayroll').innerHTML = (stats.pendingPayroll || 0) + ' <span style="font-size:.8rem;color:var(--text-muted);font-weight:500">staff</span>';
+
+                // 2. Load staff for table + attendance
                 const staffRes = await fetch('/api/staff', { headers: { 'Authorization': 'Bearer ' + token } });
                 const staff = await staffRes.json();
 
-                // Pending payroll (use stats from backend)
-                document.getElementById('pendingPayroll').innerHTML = (stats.pendingPayroll || 0) + ' <span style="font-size:.8rem;color:var(--text-muted);font-weight:500">staff</span>';
+                // Calculate attendance
+                let totalWorkingDays = 0;
+                let totalPresentDays = 0;
+                staff.forEach(s => {
+                    const workingDays = parseInt(s.working_days) || 30;
+                    const leavesTaken = (parseInt(s.cl_taken) || 0) + (parseInt(s.medical_taken) || 0) + (parseInt(s.personal_leave) || 0) + (parseInt(s.unpaid_leaves) || 0);
+                    const presentDays = Math.max(0, workingDays - leavesTaken);
+                    totalWorkingDays += workingDays;
+                    totalPresentDays += presentDays;
+                });
+                const attendanceRate = totalWorkingDays > 0 ? (totalPresentDays / totalWorkingDays) * 100 : 0;
+                animateCount(document.getElementById('attendanceRate'), attendanceRate, '', '%');
+                setTimeout(() => { document.getElementById('attendanceProgress').style.width = attendanceRate + '%'; }, 100);
 
-                // --- SALARY BREAKDOWN CHART ---
-                let avgBasic = 0, avgHRA = 0, avgDA = 0, avgAllow = 0, avgPF = 0, avgTax = 0;
-                if (staff.length > 0) {
-                    staff.forEach(s => { avgBasic += s.basic; avgHRA += s.hra; avgDA += s.da; avgAllow += s.allowance; avgPF += s.pf; avgTax += s.tax; });
-                    const n = staff.length;
-                    avgBasic /= n; avgHRA /= n; avgDA /= n; avgAllow /= n; avgPF /= n; avgTax /= n;
+                // --- MONTHLY SALARY TREND CHART ---
+                const monthOrder = {
+                    'january':1, 'jan':1, 'february':2, 'feb':2, 'march':3, 'mar':3,
+                    'april':4, 'apr':4, 'may':5, 'june':6, 'jun':6, 'july':7, 'jul':7,
+                    'august':8, 'aug':8, 'september':9, 'sep':9, 'october':10, 'oct':10,
+                    'november':11, 'nov':11, 'december':12, 'dec':12
+                };
+                
+                let trendData = stats.monthlyTrend || [];
+                // Sort by month
+                trendData.sort((a, b) => {
+                    const m1 = (a.month || '').toLowerCase();
+                    const m2 = (b.month || '').toLowerCase();
+                    return (monthOrder[m1] || 99) - (monthOrder[m2] || 99);
+                });
+
+                const trendLabels = trendData.map(d => d.month);
+                const trendValues = trendData.map(d => d.totalPayout);
+
+                // Optional indicator logic
+                if (trendValues.length >= 2) {
+                    const last = trendValues[trendValues.length - 1];
+                    const prev = trendValues[trendValues.length - 2];
+                    if (prev > 0) {
+                        const diff = ((last - prev) / prev) * 100;
+                        const indicatorSpan = document.getElementById('trendIndicator');
+                        if(indicatorSpan) {
+                            indicatorSpan.innerHTML = diff >= 0 
+                                ? `<span style="color:var(--success)">↑ ${diff.toFixed(1)}%</span>`
+                                : `<span style="color:#ef4444">↓ ${Math.abs(diff).toFixed(1)}%</span>`;
+                        }
+                    }
                 }
-                new Chart(document.getElementById('salaryChart').getContext('2d'), {
-                    type: 'bar',
+
+                const ctx = document.getElementById('salaryChart').getContext('2d');
+                
+                // Create gradient
+                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)'); // Vibrant purple-blue fill
+                gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+
+                new Chart(ctx, {
+                    type: 'line',
                     data: {
-                        labels: ['Basic', 'HRA', 'DA', 'Allowance', 'PF', 'Tax'],
+                        labels: trendLabels,
                         datasets: [{
-                            label: 'Average',
-                            data: [avgBasic, avgHRA, avgDA, avgAllow, avgPF, avgTax].map(v => Math.round(v)),
-                            backgroundColor: ['rgba(59,130,246,0.6)', 'rgba(139,92,246,0.6)', 'rgba(16,185,129,0.6)', 'rgba(245,158,11,0.6)', 'rgba(239,68,68,0.5)', 'rgba(236,72,153,0.5)'],
-                            borderColor: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'],
-                            borderWidth: 1, borderRadius: 6
+                            label: 'Total Salary',
+                            data: trendValues,
+                            borderColor: '#6366f1', // Vibrant line color
+                            backgroundColor: gradient,
+                            borderWidth: 3,
+                            pointBackgroundColor: '#0f172a', // Hollow center matching background
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            pointHoverBackgroundColor: '#6366f1',
+                            pointHoverBorderColor: '#ffffff',
+                            pointHoverBorderWidth: 3,
+                            fill: true,
+                            tension: 0.4 // Smooth lines
                         }]
                     },
                     options: {
                         responsive: true,
-                        plugins: { legend: { display: false } },
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 1500,
+                            easing: 'easeOutQuart'
+                        },
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        plugins: { 
+                            legend: { display: false }, 
+                            tooltip: {
+                                backgroundColor: '#1e293b',
+                                titleColor: '#ffffff',
+                                titleFont: { family: 'Inter', size: 13, weight: '600' },
+                                bodyColor: '#cbd5e1',
+                                bodyFont: { family: 'Inter', size: 13 },
+                                borderColor: 'rgba(255,255,255,0.08)',
+                                borderWidth: 1,
+                                padding: 12,
+                                displayColors: true,
+                                boxWidth: 10,
+                                boxHeight: 10,
+                                cornerRadius: 8,
+                                callbacks: { 
+                                    title: (ctx) => {
+                                        const year = new Date().getFullYear();
+                                        return ctx[0].label + ' ' + year;
+                                    },
+                                    label: (ctx) => '₹' + ctx.parsed.y.toLocaleString('en-IN', { maximumFractionDigits: 0 })
+                                }
+                            }
+                        },
                         scales: {
-                            x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.06)' } },
-                            y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.06)' } }
+                            x: { 
+                                ticks: { color: '#94a3b8', font: { family: 'Inter', size: 12 }, padding: 10 }, 
+                                grid: { display: false },
+                                border: { display: false }
+                            },
+                            y: { 
+                                beginAtZero: true,
+                                ticks: { 
+                                    color: '#94a3b8', 
+                                    font: { family: 'Inter', size: 12 },
+                                    padding: 10,
+                                    callback: v => '₹' + (v >= 10000000 ? (v/10000000).toFixed(1)+'Cr' : v >= 100000 ? (v/100000).toFixed(1)+'L' : v >= 1000 ? (v/1000).toFixed(0)+'K' : v) 
+                                }, 
+                                grid: { color: 'rgba(148,163,184,0.06)' },
+                                border: { display: false }
+                            }
                         }
                     }
                 });
 
-                // --- QUALIFICATION PIE CHART (by final_salary) ---
-                const deptMap = {};
-                staff.forEach(s => {
-                    const qual = s.qualification || 'Not Specified';
-                    deptMap[qual] = (deptMap[qual] || 0) + (s.final_salary || s.net || 0);
-                });
-                const deptLabels = Object.keys(deptMap);
-                const deptValues = Object.values(deptMap);
-                const pieColors = ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ec4899', '#ef4444', '#06b6d4', '#f97316'];
+                // --- SECTION PIE CHART (use backend stats) ---
+                let deptLabels = [], deptValues = [];
+                if (stats.sectionDistribution && stats.sectionDistribution.length > 0) {
+                    deptLabels = stats.sectionDistribution.map(s => s.section_name);
+                    deptValues = stats.sectionDistribution.map(s => parseFloat(s.total_salary) || 0);
+                } else {
+                    // Fallback: compute from staff array
+                    const sectionMap = {};
+                    staff.forEach(s => {
+                        const sec = (s.section && s.section.trim()) || (s.department && s.department.trim()) || 'Not Specified';
+                        sectionMap[sec] = (sectionMap[sec] || 0) + (s.final_salary || s.net || 0);
+                    });
+                    deptLabels = Object.keys(sectionMap);
+                    deptValues = Object.values(sectionMap);
+                }
+                const pieColors = ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ec4899', '#ef4444', '#06b6d4', '#f97316', '#14b8a6', '#a855f7', '#f43f5e', '#eab308'];
                 new Chart(document.getElementById('deptChart').getContext('2d'), {
                     type: 'doughnut',
                     data: {
@@ -250,38 +374,126 @@
                     }
                 });
 
-                // --- RECENT STAFF TABLE (last 5) ---
-                const recent = staff.slice(0, 5);
+                // --- RECENT STAFF TABLE (last 5 from DB with timestamps) ---
+                const recentList = stats.recentlyAdded && stats.recentlyAdded.length > 0 ? stats.recentlyAdded : staff.slice(0, 5);
                 const tbody = document.getElementById('recentStaffBody');
-                if (recent.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem">No staff records yet</td></tr>';
+
+                function timeAgo(dateStr) {
+                    if (!dateStr) return '';
+                    const now = new Date();
+                    const date = new Date(dateStr);
+                    const diffMs = now - date;
+                    const diffMin = Math.floor(diffMs / 60000);
+                    const diffHr = Math.floor(diffMs / 3600000);
+                    const diffDay = Math.floor(diffMs / 86400000);
+                    if (diffMin < 1) return 'Just now';
+                    if (diffMin < 60) return `${diffMin}m ago`;
+                    if (diffHr < 24) return `${diffHr}h ago`;
+                    if (diffDay < 7) return `${diffDay}d ago`;
+                    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                }
+
+                if (recentList.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem">No staff records yet</td></tr>';
                 } else {
-                    tbody.innerHTML = recent.map((s, i) => {
+                    tbody.innerHTML = recentList.map((s, i) => {
                         const unpaid = s.unpaid_leaves || 0;
                         const statusClass = unpaid > 0 ? 'badge-pending' : 'badge-processed';
                         const statusText = unpaid > 0 ? `${unpaid} Unpaid` : 'All Paid';
+                        const addedTime = timeAgo(s.created_at);
                         return `
                         <tr>
                             <td>
                                 <div class="staff-row">
                                     <div class="staff-avatar ${avatarColors[i % avatarColors.length]}">${getInitials(s.name)}</div>
-                                    <strong>${s.name}</strong>
+                                    <div>
+                                        <strong>${s.name}</strong>
+                                        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">${addedTime}</div>
+                                    </div>
                                 </div>
                             </td>
                             <td style="color:var(--text-muted)">${s.role || '-'}</td>
                             <td><span class="badge">${s.department}</span></td>
-                            <td>₹${(s.final_salary || s.net).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                            <td>₹${(s.final_salary || s.net || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                             <td><span class="${statusClass}">${statusText}</span></td>
                         </tr>
                     `}).join('');
                 }
 
-                // --- RECENT ACTIVITY TIMELINE ---
+                // --- REAL ACTIVITY TIMELINE (from database) ---
                 const activities = [];
-                if (recent.length > 0) activities.push({ icon: '👤', cls: 'blue', text: `${recent[0].name} added to ${recent[0].department} Department`, time: 'Recently • by Admin' });
-                if (staff.length > 1) activities.push({ icon: '💵', cls: 'green', text: `Salary generated for ${staff.length} staff members`, time: 'System • Automated' });
-                activities.push({ icon: '📤', cls: 'purple', text: 'Excel bulk upload available', time: 'Ready • Quick Actions' });
-                if (staff.length > 2) activities.push({ icon: '📋', cls: 'orange', text: `${stats.totalDepartments || 0} departments active`, time: 'Current cycle' });
+
+                // 1. Recently added staff (real entries with real timestamps)
+                if (stats.recentlyAdded && stats.recentlyAdded.length > 0) {
+                    const latest = stats.recentlyAdded[0];
+                    activities.push({
+                        icon: '👤', cls: 'blue',
+                        text: `<strong>${latest.name}</strong> added as ${latest.role || 'Staff'} in <strong>${latest.department}</strong>`,
+                        time: timeAgo(latest.created_at) + ' • New Entry'
+                    });
+                }
+
+                // 2. Recently paid salary (real payment)
+                if (stats.recentlyPaid && stats.recentlyPaid.length > 0) {
+                    const paid = stats.recentlyPaid[0];
+                    const paidDate = paid.paid_date ? new Date(paid.paid_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
+                    activities.push({
+                        icon: '💰', cls: 'green',
+                        text: `<strong>${paid.name}</strong> salary ₹${(paid.final_salary || 0).toLocaleString('en-IN')} paid`,
+                        time: `${paidDate} ${paid.paid_time || ''} • Payment`
+                    });
+                }
+
+                // 3. Today's summary
+                if (stats.todayAdded > 0 || stats.todayPaid > 0) {
+                    let todayText = [];
+                    if (stats.todayAdded > 0) todayText.push(`<strong>${stats.todayAdded}</strong> staff added`);
+                    if (stats.todayPaid > 0) todayText.push(`<strong>${stats.todayPaid}</strong> salaries paid`);
+                    activities.push({
+                        icon: '📊', cls: 'purple',
+                        text: `Today: ${todayText.join(', ')}`,
+                        time: 'Today • Summary'
+                    });
+                }
+
+                // 4. Highest salary earner
+                if (stats.highestSalary && stats.highestSalary.length > 0) {
+                    const top = stats.highestSalary[0];
+                    activities.push({
+                        icon: '🏆', cls: 'orange',
+                        text: `Top earner: <strong>${top.name}</strong> — ₹${(top.final_salary || 0).toLocaleString('en-IN')}`,
+                        time: `${top.department} • Highest Salary`
+                    });
+                }
+
+                // 5. Highest deduction
+                if (stats.highestDeduction && stats.highestDeduction.length > 0) {
+                    const ded = stats.highestDeduction[0];
+                    activities.push({
+                        icon: '⚠️', cls: 'red',
+                        text: `Max deduction: <strong>${ded.name}</strong> — ₹${(ded.deduction || 0).toLocaleString('en-IN')} (${ded.unpaid_leaves} unpaid leaves)`,
+                        time: `${ded.department} • Deduction Alert`
+                    });
+                }
+
+                // 6. Most leaves taken
+                if (stats.mostLeaves && stats.mostLeaves.length > 0) {
+                    const lv = stats.mostLeaves[0];
+                    if (lv.total_leaves > 0) {
+                        activities.push({
+                            icon: '🗓️', cls: 'pink',
+                            text: `Most leaves: <strong>${lv.name}</strong> — ${lv.total_leaves} days (${lv.unpaid_leaves} unpaid)`,
+                            time: `${lv.department} • Leave Report`
+                        });
+                    }
+                }
+
+                // 7. Payroll summary
+                activities.push({
+                    icon: '📋', cls: 'blue',
+                    text: `<strong>${stats.paidPayroll || 0}</strong> paid, <strong>${stats.pendingPayroll || 0}</strong> pending out of <strong>${stats.totalStaff}</strong> staff`,
+                    time: `${stats.totalDepartments || 0} departments • Payroll Status`
+                });
 
                 const timelineEl = document.getElementById('activityTimeline');
                 timelineEl.innerHTML = activities.map(a => `

@@ -14,6 +14,7 @@ router.post('/', staffController.createStaff);
 router.put('/bulk-pay', staffController.payBulkSalary);
 router.put('/:id/pay', staffController.paySalary);
 router.put('/:id', staffController.updateStaff);
+router.delete('/all', staffController.deleteAllStaff);
 router.delete('/:id', staffController.deleteStaff);
 
 module.exports = router;
