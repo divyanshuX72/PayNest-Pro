@@ -90,6 +90,20 @@ const setupDB = async () => {
         `);
         console.log('Table `admin_logs` created.');
 
+        // 5. Create activity_logs table
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS activity_logs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                activity_type VARCHAR(100) NOT NULL,
+                message TEXT NOT NULL,
+                staff_id INT DEFAULT NULL,
+                department VARCHAR(255) DEFAULT '',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE SET NULL
+            );
+        `);
+        console.log('Table `activity_logs` created.');
+
         // Insert default admin if none exists
         const [rows] = await connection.query('SELECT COUNT(*) as count FROM admins');
         if (rows[0].count === 0) {

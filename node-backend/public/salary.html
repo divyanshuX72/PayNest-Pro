@@ -428,11 +428,12 @@
             const month = document.getElementById('monthFilter').value;
             let filtered = allStaff;
             if (q) filtered = filtered.filter(s =>
-                s.name.toLowerCase().includes(q) ||
-                s.department.toLowerCase().includes(q) ||
+                (s.name || '').toLowerCase().includes(q) ||
+                (s.department || '').toLowerCase().includes(q) ||
                 (s.role || '').toLowerCase().includes(q) ||
                 (s.employee_id || '').toLowerCase().includes(q) ||
-                (s.qualification || '').toLowerCase().includes(q)
+                (s.qualification || '').toLowerCase().includes(q) ||
+                (s.section || '').toLowerCase().includes(q)
             );
             if (month) filtered = filtered.filter(s => monthMatches(s.month, month));
             renderSalary(filtered);

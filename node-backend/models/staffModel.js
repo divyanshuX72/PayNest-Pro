@@ -115,7 +115,7 @@ class StaffModel {
         // 1. Create or get staff
         let staffId;
         const [existing] = await pool.query('SELECT id FROM staff WHERE employee_id = ?', [d.employee_id]);
-        
+
         if (existing.length > 0) {
             staffId = existing[0].id;
             // Update staff details
@@ -211,7 +211,7 @@ class StaffModel {
                 d.gross || 0, d.deduction || 0, d.final_salary || 0
             ]);
         }
-        
+
         return 1;
     }
 
@@ -257,7 +257,7 @@ class StaffModel {
         const date = new Date().toISOString().split('T')[0];
         const time = new Date().toTimeString().split(' ')[0];
         const placeholders = staffIds.map(() => '?').join(',');
-        
+
         // Find latest payrolls for these staff
         const [payrolls] = await pool.query(
             `SELECT MAX(id) as pid FROM payroll WHERE staff_id IN (${placeholders}) GROUP BY staff_id`,
@@ -265,7 +265,7 @@ class StaffModel {
         );
         const pids = payrolls.map(p => p.pid);
         if (pids.length === 0) return 0;
-        
+
         const pidPlaceholders = pids.map(() => '?').join(',');
         const [result] = await pool.query(
             `UPDATE payroll SET payment_status='paid', paid_date=?, paid_time=? WHERE id IN (${pidPlaceholders})`,
@@ -283,11 +283,14 @@ class StaffModel {
 
         // Attendance Percentage
         const [attendanceStats] = await pool.query('SELECT SUM(working_days) as total_working, SUM(cl_used + medical_used + personal_leave) as total_leaves FROM payroll');
-        let attendanceRate = 100;
-        if (attendanceStats[0] && attendanceStats[0].total_working > 0) {
-            const tw = attendanceStats[0].total_working;
-            const tl = attendanceStats[0].total_leaves || 0;
-            attendanceRate = Math.round(((tw - tl) / tw) * 100);
+        let attendanceRate = 0;
+        if (staffCount[0].total > 0) {
+            attendanceRate = 100; // Default to 100% if staff exists but no payroll recorded
+            if (attendanceStats[0] && attendanceStats[0].total_working > 0) {
+                const tw = attendanceStats[0].total_working;
+                const tl = attendanceStats[0].total_leaves || 0;
+                attendanceRate = Math.round(((tw - tl) / tw) * 100);
+            }
         }
 
         // Section distribution
