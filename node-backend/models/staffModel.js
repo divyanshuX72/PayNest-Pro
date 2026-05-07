@@ -4,8 +4,9 @@ class StaffModel {
     static async findAll() {
         const [rows] = await pool.query(`
             SELECT 
-                p.id as id,
+                s.id as id,
                 s.id as staff_id,
+                p.id as payroll_id,
                 s.employee_id,
                 s.name,
                 s.role,
@@ -32,9 +33,12 @@ class StaffModel {
                 p.paid_date,
                 p.paid_time,
                 p.created_at
-            FROM payroll p
-            JOIN staff s ON p.staff_id = s.id
-            ORDER BY p.id DESC
+            FROM staff s
+            LEFT JOIN (
+                SELECT * FROM payroll 
+                WHERE id IN (SELECT MAX(id) FROM payroll GROUP BY staff_id)
+            ) p ON p.staff_id = s.id
+            ORDER BY s.id DESC
         `);
         return rows;
     }
@@ -42,8 +46,9 @@ class StaffModel {
     static async findById(id) {
         const [rows] = await pool.query(`
             SELECT 
-                p.id as id,
+                s.id as id,
                 s.id as staff_id,
+                p.id as payroll_id,
                 s.employee_id,
                 s.name,
                 s.role,
@@ -70,9 +75,12 @@ class StaffModel {
                 p.paid_date,
                 p.paid_time,
                 p.created_at
-            FROM payroll p
-            JOIN staff s ON p.staff_id = s.id
-            WHERE p.id = ?
+            FROM staff s
+            LEFT JOIN (
+                SELECT * FROM payroll 
+                WHERE id IN (SELECT MAX(id) FROM payroll GROUP BY staff_id)
+            ) p ON p.staff_id = s.id
+            WHERE s.id = ?
         `, [id]);
         return rows[0];
     }
@@ -163,65 +171,105 @@ class StaffModel {
         }
     }
 
-    static async update(payrollId, d) {
-        // Find payroll record to get staff_id
-        const [payrolls] = await pool.query('SELECT staff_id FROM payroll WHERE id = ?', [payrollId]);
-        if (payrolls.length === 0) return 0;
-        const staffId = payrolls[0].staff_id;
-
-        // Update staff
+    static async update(staffId, d) {
         const empId = d.employee_id && d.employee_id.trim() !== '' ? d.employee_id : await this.getNextEmployeeId();
-        await pool.query(`
+        const [staffUpdateResult] = await pool.query(`
             UPDATE staff SET employee_id=?, name=?, role=?, department=?, section=?, salary_type=? WHERE id=?
         `, [empId, d.name, d.role || '', d.department, d.section || '', d.salary_type || 'Monthly', staffId]);
 
+        if (staffUpdateResult.affectedRows === 0) return 0;
+
         const cl = d.cl_taken || d.cl_used || 0;
         const med = d.medical_taken || d.medical_used || 0;
+        const currentYear = new Date().getFullYear();
+        const month = d.month || 'Jan';
 
-        // Update payroll
-        const [result] = await pool.query(`
-            UPDATE payroll SET 
-            payroll_month=?, basic=?, hra=?, da=?, allowance=?, pf=?, tax=?, working_days=?, 
-            cl_used=?, medical_used=?, personal_leave=?, gross_salary=?, deduction=?, final_salary=?
-            WHERE id=?
-        `, [
-            d.month || 'Jan', d.basic || 0, d.hra || 0, d.da || 0, d.allowance || 0, d.pf || 0, d.tax || 0,
-            d.working_days || 30, cl, med, d.personal_leave || 0,
-            d.gross || 0, d.deduction || 0, d.final_salary || 0, payrollId
-        ]);
+        const [payrolls] = await pool.query('SELECT id FROM payroll WHERE staff_id=? AND payroll_month=? AND payroll_year=?', [staffId, month, currentYear]);
+
+        if (payrolls.length > 0) {
+            await pool.query(`
+                UPDATE payroll SET 
+                basic=?, hra=?, da=?, allowance=?, pf=?, tax=?, working_days=?, 
+                cl_used=?, medical_used=?, personal_leave=?, gross_salary=?, deduction=?, final_salary=?
+                WHERE id=?
+            `, [
+                d.basic || 0, d.hra || 0, d.da || 0, d.allowance || 0, d.pf || 0, d.tax || 0,
+                d.working_days || 30, cl, med, d.personal_leave || 0,
+                d.gross || 0, d.deduction || 0, d.final_salary || 0, payrolls[0].id
+            ]);
+        } else {
+            await pool.query(`
+                INSERT INTO payroll (
+                    staff_id, payroll_month, payroll_year, basic, hra, da, allowance, 
+                    pf, tax, working_days, cl_used, medical_used, personal_leave, 
+                    gross_salary, deduction, final_salary
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [
+                staffId, month, currentYear,
+                d.basic || 0, d.hra || 0, d.da || 0, d.allowance || 0,
+                d.pf || 0, d.tax || 0, d.working_days || 30, cl, med, d.personal_leave || 0,
+                d.gross || 0, d.deduction || 0, d.final_salary || 0
+            ]);
+        }
         
-        return result.affectedRows;
+        return 1;
     }
 
-    static async delete(payrollId) {
-        const [result] = await pool.query('DELETE FROM payroll WHERE id = ?', [payrollId]);
+    static async delete(staffId) {
+        await pool.query('DELETE FROM payroll WHERE staff_id = ?', [staffId]);
+        const [result] = await pool.query('DELETE FROM staff WHERE id = ?', [staffId]);
         return result.affectedRows;
     }
 
     static async deleteAll() {
-        await pool.query('TRUNCATE TABLE payroll');
-        const [result] = await pool.query('TRUNCATE TABLE staff');
+        await pool.query('DELETE FROM payroll');
+        const [result] = await pool.query('DELETE FROM staff');
+        await pool.query('ALTER TABLE payroll AUTO_INCREMENT = 1');
+        await pool.query('ALTER TABLE staff AUTO_INCREMENT = 1');
         return result.affectedRows;
     }
 
-    static async paySalary(payrollId) {
+    static async paySalary(staffId) {
         const date = new Date().toISOString().split('T')[0];
         const time = new Date().toTimeString().split(' ')[0];
-        const [result] = await pool.query(
-            "UPDATE payroll SET payment_status='paid', paid_date=?, paid_time=? WHERE id=?",
-            [date, time, payrollId]
+        const currentYear = new Date().getFullYear();
+        // Pay the latest pending payroll for this staff, or create one if none exists?
+        // Since we are clicking "Pay Salary" on a staff row, let's update their latest payroll
+        const [payrolls] = await pool.query('SELECT id FROM payroll WHERE staff_id=? ORDER BY id DESC LIMIT 1', [staffId]);
+        if (payrolls.length > 0) {
+            const [result] = await pool.query(
+                "UPDATE payroll SET payment_status='paid', paid_date=?, paid_time=? WHERE id=?",
+                [date, time, payrolls[0].id]
+            );
+            return result.affectedRows;
+        } else {
+            // If they have no payroll, create an empty one and mark paid
+            const [result] = await pool.query(
+                "INSERT INTO payroll (staff_id, payroll_month, payroll_year, payment_status, paid_date, paid_time) VALUES (?, 'Jan', ?, 'paid', ?, ?)",
+                [staffId, currentYear, date, time]
+            );
+            return result.affectedRows;
+        }
+    }
+
+    static async payBulkSalary(staffIds) {
+        if (!staffIds || staffIds.length === 0) return 0;
+        const date = new Date().toISOString().split('T')[0];
+        const time = new Date().toTimeString().split(' ')[0];
+        const placeholders = staffIds.map(() => '?').join(',');
+        
+        // Find latest payrolls for these staff
+        const [payrolls] = await pool.query(
+            `SELECT MAX(id) as pid FROM payroll WHERE staff_id IN (${placeholders}) GROUP BY staff_id`,
+            staffIds
         );
-        return result.affectedRows;
-    }
-
-    static async payBulkSalary(payrollIds) {
-        if (!payrollIds || payrollIds.length === 0) return 0;
-        const date = new Date().toISOString().split('T')[0];
-        const time = new Date().toTimeString().split(' ')[0];
-        const placeholders = payrollIds.map(() => '?').join(',');
+        const pids = payrolls.map(p => p.pid);
+        if (pids.length === 0) return 0;
+        
+        const pidPlaceholders = pids.map(() => '?').join(',');
         const [result] = await pool.query(
-            `UPDATE payroll SET payment_status='paid', paid_date=?, paid_time=? WHERE id IN (${placeholders})`,
-            [date, time, ...payrollIds]
+            `UPDATE payroll SET payment_status='paid', paid_date=?, paid_time=? WHERE id IN (${pidPlaceholders})`,
+            [date, time, ...pids]
         );
         return result.affectedRows;
     }
@@ -232,6 +280,15 @@ class StaffModel {
         const [departmentCount] = await pool.query('SELECT COUNT(DISTINCT department) as totalDeps FROM staff');
         const [pendingPayroll] = await pool.query('SELECT COUNT(*) as count FROM payroll WHERE payment_status="pending" OR payment_status IS NULL');
         const [paidPayroll] = await pool.query('SELECT COUNT(*) as count FROM payroll WHERE payment_status="paid"');
+
+        // Attendance Percentage
+        const [attendanceStats] = await pool.query('SELECT SUM(working_days) as total_working, SUM(cl_used + medical_used + personal_leave) as total_leaves FROM payroll');
+        let attendanceRate = 100;
+        if (attendanceStats[0] && attendanceStats[0].total_working > 0) {
+            const tw = attendanceStats[0].total_working;
+            const tl = attendanceStats[0].total_leaves || 0;
+            attendanceRate = Math.round(((tw - tl) / tw) * 100);
+        }
 
         // Section distribution
         const [sectionData] = await pool.query(`
@@ -315,6 +372,7 @@ class StaffModel {
             totalDepartments: departmentCount[0].totalDeps || 0,
             pendingPayroll: pendingPayroll[0].count || 0,
             paidPayroll: paidPayroll[0].count || 0,
+            attendanceRate: attendanceRate,
             sectionDistribution: sectionData || [],
             salaryBreakdown: salaryBreakdown[0] || {},
             monthlyTrend: monthlyTrend || [],

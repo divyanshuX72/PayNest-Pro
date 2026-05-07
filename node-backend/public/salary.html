@@ -166,17 +166,30 @@
         }
 
         .month-filter select {
-            background: var(--card-bg);
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: var(--card-bg);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1rem;
             color: var(--text-main);
             border: 1px solid var(--border);
-            padding: .5rem .75rem;
+            padding: .5rem 2.2rem .5rem .85rem;
             border-radius: 8px;
             font-size: .82rem;
             font-family: inherit;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .month-filter select:focus {
+            border-color: var(--primary);
         }
 
         .month-filter select option {
-            background-color: var(--bg-dark, #0f172a);
+            background-color: #0d1229;
             color: #f8fafc;
         }
     </style>
@@ -232,8 +245,8 @@
             <div class="toolbar">
                 <div class="search-bar">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput"
-                        placeholder="Search by ID, name, role, department, section..." oninput="filterSalary()">
+                    <input type="text" id="searchInput" placeholder="Search by ID, name, role, department, section..."
+                        oninput="filterSalary()">
                 </div>
                 <div class="month-filter">
                     <select id="monthFilter" onchange="filterSalary()">
@@ -313,8 +326,8 @@
         function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('active') }
         function showToast(msg, type = 'info') { const c = document.getElementById('toastContainer'); const t = document.createElement('div'); t.className = 'toast toast-' + type; t.textContent = msg; c.appendChild(t); setTimeout(() => t.remove(), 3500) }
 
-        const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
         // Smart month matching: "Aug" matches "August", "august", "Mar" matches "March", etc.
         function monthMatches(staffMonth, filterMonth) {

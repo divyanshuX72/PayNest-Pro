@@ -91,29 +91,18 @@
             align-items: center;
         }
 
-        .filter-select-wrap::after {
-            content: '';
-            position: absolute;
-            right: .75rem;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 0;
-            height: 0;
-            border-left: 4px solid transparent;
-            border-right: 4px solid transparent;
-            border-top: 5px solid var(--text-muted);
-            pointer-events: none;
-            flex-shrink: 0;
-        }
-
         .filter-select {
             appearance: none;
             -webkit-appearance: none;
             -moz-appearance: none;
-            background: var(--glass-bg);
+            background-color: var(--glass-bg);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1rem;
             color: var(--text-main);
             border: 1px solid var(--border);
-            padding: .55rem 2rem .55rem .85rem;
+            padding: .55rem 2.2rem .55rem .85rem;
             /* right gap for the chevron */
             border-radius: 8px;
             font-size: .85rem;
@@ -492,7 +481,7 @@
 
         /* ── Date helpers ── */
         const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const MONTH_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        const MONTH_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
         // Smart month matching: "Aug" matches "August", "august", "Aug", etc.
         function monthMatches(staffMonth, filterMonth) {
