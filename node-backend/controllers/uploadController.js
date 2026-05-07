@@ -197,15 +197,7 @@ exports.uploadExcel = async (req, res, next) => {
                 quota_cycle: currentCycle
             };
 
-            if (staffData.name && staffData.employee_id) {
-                // Check for duplicates
-                const existing = await StaffModel.findByEmployeeId(staffData.employee_id);
-                if (!existing) {
-                    await StaffModel.create(staffData);
-                    insertedCount++;
-                }
-            } else if (staffData.name) {
-                // If no ID provided, just create
+            if (staffData.name) {
                 await StaffModel.create(staffData);
                 insertedCount++;
             }

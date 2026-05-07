@@ -8,7 +8,6 @@ const getCurrentCycle = () => {
     return month <= 6 ? `${year}-H1` : `${year}-H2`;
 };
 
-// Core salary + leave calculation
 const calculatePayroll = (data, existingStaff = null) => {
     const basic = parseFloat(data.basic) || 0;
     const hra = parseFloat(data.hra) || 0;
@@ -17,47 +16,42 @@ const calculatePayroll = (data, existingStaff = null) => {
     const pf = parseFloat(data.pf) || 0;
     const tax = parseFloat(data.tax) || 0;
     const working_days = parseInt(data.working_days) || 30;
-    const cl_taken = parseInt(data.cl_taken) || 0;
-    const medical_taken = parseInt(data.medical_taken) || 0;
+    
+    // Support either cl_taken or cl_used naming from different frontend parts
+    const cl_taken = parseInt(data.cl_taken) || parseInt(data.cl_used) || 0;
+    const medical_taken = parseInt(data.medical_taken) || parseInt(data.medical_used) || 0;
     const personal_leave = parseInt(data.personal_leave) || 0;
 
+    // Gross Salary = Basic + HRA + DA + Allowance
     const gross = basic + hra + da + allowance;
-    const net = gross - pf - tax;
 
-    let cl_quota = parseInt(data.cl_quota) || 8;
-    let medical_quota = parseInt(data.medical_quota) || 2;
-
-    const currentCycle = getCurrentCycle();
-    let prev_cl_used = 0;
-    let prev_medical_used = 0;
-
-    if (existingStaff && existingStaff.quota_cycle === currentCycle) {
-        prev_cl_used = (parseInt(existingStaff.cl_used) || 0) - (parseInt(existingStaff.cl_taken) || 0);
-        prev_medical_used = (parseInt(existingStaff.medical_used) || 0) - (parseInt(existingStaff.medical_taken) || 0);
-    }
-
-    const cl_used = Math.max(0, prev_cl_used) + cl_taken;
-    const medical_used = Math.max(0, prev_medical_used) + medical_taken;
-
-    const paid_cl = Math.min(cl_taken, Math.max(0, cl_quota - Math.max(0, prev_cl_used)));
-    const paid_medical = Math.min(medical_taken, Math.max(0, medical_quota - Math.max(0, prev_medical_used)));
-
-    const extra_cl = Math.max(0, cl_taken - paid_cl);
-    const extra_medical = Math.max(0, medical_taken - paid_medical);
-    const unpaid_leaves = extra_cl + extra_medical + personal_leave;
-
+    // Per Day Salary = Gross / WorkingDays
     const per_day = working_days > 0 ? gross / working_days : 0;
+
+    // LEAVE QUOTA RULES
+    const cl_quota = 8;
+    const medical_quota = 2;
+
+    const extra_cl = Math.max(0, cl_taken - cl_quota);
+    const extra_medical = Math.max(0, medical_taken - medical_quota);
+    
+    // Unpaid Leaves = Personal leave + Extra CL beyond quota + Extra medical beyond quota
+    const unpaid_leaves = personal_leave + extra_cl + extra_medical;
+
+    // Deduction = Per Day Salary × Unpaid Leaves
     const deduction = per_day * unpaid_leaves;
+
+    // Final Salary = Gross - Deduction - PF - Tax
     const final_salary = gross - deduction - pf - tax;
 
     return {
-        basic, hra, da, allowance, pf, tax, gross, net,
-        working_days, cl_taken, medical_taken, personal_leave,
-        cl_quota, cl_used, medical_quota, medical_used,
-        unpaid_leaves,
+        basic, hra, da, allowance, pf, tax, gross,
+        working_days, 
+        cl_used: cl_taken, 
+        medical_used: medical_taken, 
+        personal_leave,
         deduction: Math.round(deduction * 100) / 100,
-        final_salary: Math.round(final_salary * 100) / 100,
-        quota_cycle: currentCycle
+        final_salary: Math.round(final_salary * 100) / 100
     };
 };
 

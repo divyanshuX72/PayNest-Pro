@@ -11,7 +11,7 @@ const setupDB = async () => {
             password: process.env.DB_PASSWORD || ''
         });
 
-        const dbName = process.env.DB_NAME || 'payroll_system_new';
+        const dbName = process.env.DB_NAME || 'payroll_db_2';
 
         console.log(`Setting up database: ${dbName}...`);
 
@@ -20,93 +20,75 @@ const setupDB = async () => {
 
         await connection.query(`USE \`${dbName}\`;`);
 
-        // Create admins table
+        // 1. Create admins table
         await connection.query(`
             CREATE TABLE IF NOT EXISTS admins (
                 id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) DEFAULT '',
                 email VARCHAR(255) NOT NULL UNIQUE,
                 password VARCHAR(255) NOT NULL,
+                role VARCHAR(100) DEFAULT 'admin',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log('Table `admins` created or already exists.');
+        console.log('Table `admins` created.');
 
-        // Create staff table
+        // 2. Create staff table
         await connection.query(`
             CREATE TABLE IF NOT EXISTS staff (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                employee_id VARCHAR(50) DEFAULT '',
+                employee_id VARCHAR(50) UNIQUE NOT NULL,
                 name VARCHAR(255) NOT NULL,
                 role VARCHAR(100) DEFAULT '',
                 department VARCHAR(255) NOT NULL,
                 section VARCHAR(100) DEFAULT '',
-                level VARCHAR(100) DEFAULT '',
-                qualification VARCHAR(100) DEFAULT '',
                 salary_type VARCHAR(50) DEFAULT 'Monthly',
-                joining_date DATE DEFAULT NULL,
-                status VARCHAR(20) DEFAULT 'Active',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log('Table `staff` created.');
+
+        // 3. Create payroll table
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS payroll (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                staff_id INT NOT NULL,
+                payroll_month VARCHAR(50) NOT NULL,
+                payroll_year INT NOT NULL,
                 basic FLOAT NOT NULL DEFAULT 0,
                 hra FLOAT NOT NULL DEFAULT 0,
                 da FLOAT NOT NULL DEFAULT 0,
                 allowance FLOAT NOT NULL DEFAULT 0,
                 pf FLOAT NOT NULL DEFAULT 0,
                 tax FLOAT NOT NULL DEFAULT 0,
-                gross FLOAT NOT NULL DEFAULT 0,
-                net FLOAT NOT NULL DEFAULT 0,
-                month VARCHAR(20) DEFAULT '',
                 working_days INT DEFAULT 30,
-                cl_taken INT DEFAULT 0,
-                medical_taken INT DEFAULT 0,
-                personal_leave INT DEFAULT 0,
-                cl_quota INT DEFAULT 8,
                 cl_used INT DEFAULT 0,
-                medical_quota INT DEFAULT 2,
                 medical_used INT DEFAULT 0,
-                unpaid_leaves INT DEFAULT 0,
+                personal_leave INT DEFAULT 0,
+                gross_salary FLOAT NOT NULL DEFAULT 0,
                 deduction FLOAT DEFAULT 0,
                 final_salary FLOAT DEFAULT 0,
-                quota_cycle VARCHAR(20) DEFAULT '',
                 payment_status VARCHAR(20) DEFAULT 'pending',
-                paid_date DATE,
-                paid_time TIME,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                paid_date DATE DEFAULT NULL,
+                paid_time TIME DEFAULT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE CASCADE
             );
         `);
-        console.log('Table `staff` created or already exists.');
+        console.log('Table `payroll` created.');
 
-        // Migration: add new columns if table already existed
-        const newCols = [
-            { name: 'employee_id', def: "VARCHAR(50) DEFAULT ''" },
-            { name: 'role', def: "VARCHAR(100) DEFAULT ''" },
-            { name: 'section', def: "VARCHAR(100) DEFAULT ''" },
-            { name: 'level', def: "VARCHAR(100) DEFAULT ''" },
-            { name: 'qualification', def: "VARCHAR(100) DEFAULT ''" },
-            { name: 'salary_type', def: "VARCHAR(50) DEFAULT 'Monthly'" },
-            { name: 'joining_date', def: 'DATE DEFAULT NULL' },
-            { name: 'status', def: "VARCHAR(20) DEFAULT 'Active'" },
-            { name: 'working_days', def: 'INT DEFAULT 30' },
-            { name: 'cl_taken', def: 'INT DEFAULT 0' },
-            { name: 'medical_taken', def: 'INT DEFAULT 0' },
-            { name: 'personal_leave', def: 'INT DEFAULT 0' },
-            { name: 'cl_quota', def: 'INT DEFAULT 8' },
-            { name: 'cl_used', def: 'INT DEFAULT 0' },
-            { name: 'medical_quota', def: 'INT DEFAULT 2' },
-            { name: 'medical_used', def: 'INT DEFAULT 0' },
-            { name: 'unpaid_leaves', def: 'INT DEFAULT 0' },
-            { name: 'deduction', def: 'FLOAT DEFAULT 0' },
-            { name: 'final_salary', def: 'FLOAT DEFAULT 0' },
-            { name: 'quota_cycle', def: "VARCHAR(20) DEFAULT ''" },
-            { name: 'month', def: "VARCHAR(20) DEFAULT ''" },
-            { name: 'payment_status', def: "VARCHAR(20) DEFAULT 'pending'" },
-            { name: 'paid_date', def: 'DATE' },
-            { name: 'paid_time', def: 'TIME' }
-        ];
-        for (const col of newCols) {
-            try {
-                await connection.query(`ALTER TABLE staff ADD COLUMN ${col.name} ${col.def}`);
-                console.log(`Column '${col.name}' added.`);
-            } catch (e) { /* already exists */ }
-        }
+        // 4. Create admin_logs table
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS admin_logs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                admin_id INT NOT NULL,
+                action VARCHAR(255) NOT NULL,
+                ip_address VARCHAR(100) DEFAULT '',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE
+            );
+        `);
+        console.log('Table `admin_logs` created.');
 
         // Insert default admin if none exists
         const [rows] = await connection.query('SELECT COUNT(*) as count FROM admins');
@@ -126,3 +108,8 @@ const setupDB = async () => {
 };
 
 module.exports = setupDB;
+
+if (require.main === module) {
+    setupDB();
+}
+
