@@ -12,6 +12,7 @@ class StaffModel {
                 s.role,
                 s.department,
                 s.section,
+                s.qualification,
                 s.salary_type,
                 p.payroll_month as month,
                 p.basic,
@@ -32,6 +33,8 @@ class StaffModel {
                 p.payment_status,
                 p.paid_date,
                 p.paid_time,
+                p.payroll_year,
+                p.transaction_id,
                 p.created_at
             FROM staff s
             LEFT JOIN (
@@ -54,6 +57,7 @@ class StaffModel {
                 s.role,
                 s.department,
                 s.section,
+                s.qualification,
                 s.salary_type,
                 p.payroll_month as month,
                 p.basic,
@@ -74,6 +78,8 @@ class StaffModel {
                 p.payment_status,
                 p.paid_date,
                 p.paid_time,
+                p.payroll_year,
+                p.transaction_id,
                 p.created_at
             FROM staff s
             LEFT JOIN (
@@ -120,13 +126,13 @@ class StaffModel {
             staffId = existing[0].id;
             // Update staff details
             await pool.query(`
-                UPDATE staff SET name=?, role=?, department=?, section=?, salary_type=? WHERE id=?
-            `, [d.name, d.role || '', d.department, d.section || '', d.salary_type || 'Monthly', staffId]);
+                UPDATE staff SET name=?, role=?, department=?, section=?, qualification=?, salary_type=? WHERE id=?
+            `, [d.name, d.role || '', d.department, d.section || '', d.qualification || '', d.salary_type || 'Monthly', staffId]);
         } else {
             const [result] = await pool.query(`
-                INSERT INTO staff (employee_id, name, role, department, section, salary_type)
-                VALUES (?, ?, ?, ?, ?, ?)
-            `, [d.employee_id, d.name, d.role || '', d.department, d.section || '', d.salary_type || 'Monthly']);
+                INSERT INTO staff (employee_id, name, role, department, section, qualification, salary_type)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `, [d.employee_id, d.name, d.role || '', d.department, d.section || '', d.qualification || '', d.salary_type || 'Monthly']);
             staffId = result.insertId;
         }
 
@@ -174,8 +180,8 @@ class StaffModel {
     static async update(staffId, d) {
         const empId = d.employee_id && d.employee_id.trim() !== '' ? d.employee_id : await this.getNextEmployeeId();
         const [staffUpdateResult] = await pool.query(`
-            UPDATE staff SET employee_id=?, name=?, role=?, department=?, section=?, salary_type=? WHERE id=?
-        `, [empId, d.name, d.role || '', d.department, d.section || '', d.salary_type || 'Monthly', staffId]);
+            UPDATE staff SET employee_id=?, name=?, role=?, department=?, section=?, qualification=?, salary_type=? WHERE id=?
+        `, [empId, d.name, d.role || '', d.department, d.section || '', d.qualification || '', d.salary_type || 'Monthly', staffId]);
 
         if (staffUpdateResult.affectedRows === 0) return 0;
 

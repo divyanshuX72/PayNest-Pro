@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Salary Slip - PayNest Pro</title>
+    <meta name="description" content="Verify the authenticity of a PayNest Pro salary slip using its unique verification token.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;min-height:100vh;background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);display:flex;align-items:center;justify-content:center;padding:1.5rem}
+        .verify-card{background:#ffffff;border-radius:20px;max-width:520px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,.35);overflow:hidden;animation:slideUp .6s ease}
+        @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+        .card-header{background:linear-gradient(135deg,#1e40af,#3b82f6);padding:2rem;text-align:center}
+        .card-header .logo{width:52px;height:52px;background:rgba(255,255,255,.15);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff;font-weight:800;margin-bottom:.8rem;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2)}
+        .card-header h1{color:#fff;font-size:1.3rem;font-weight:700;letter-spacing:.02em}
+        .card-header p{color:rgba(255,255,255,.7);font-size:.82rem;margin-top:.3rem}
+        .card-body{padding:2rem}
+        .status-badge{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.5rem;border-radius:50px;font-weight:700;font-size:.9rem;margin:0 auto 1.5rem;letter-spacing:.03em}
+        .status-valid{background:#dcfce7;color:#15803d;border:1.5px solid #86efac}
+        .status-invalid{background:#fee2e2;color:#dc2626;border:1.5px solid #fca5a5}
+        .status-icon{font-size:1.2rem}
+        .status-container{text-align:center;margin-bottom:1.5rem}
+        .info-grid{display:grid;gap:.8rem}
+        .info-row{display:flex;justify-content:space-between;align-items:center;padding:.7rem 1rem;background:#f8fafc;border-radius:10px;border:1px solid #f1f5f9}
+        .info-row:hover{background:#eff6ff;border-color:#bfdbfe;transition:.2s}
+        .info-label{font-size:.78rem;color:#64748b;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+        .info-value{font-size:.88rem;color:#0f172a;font-weight:600;text-align:right}
+        .info-value.salary{color:#16a34a;font-size:1rem}
+        .payment-badge{display:inline-block;padding:.2rem .7rem;border-radius:20px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+        .badge-paid{background:#dcfce7;color:#15803d}
+        .badge-pending{background:#fee2e2;color:#dc2626}
+        .badge-processing{background:#fef3c7;color:#d97706}
+        .seal{text-align:center;margin-top:1.5rem;padding-top:1.2rem;border-top:1px dashed #e2e8f0}
+        .seal-icon{font-size:2.5rem;opacity:.6}
+        .seal-text{font-size:.7rem;color:#94a3b8;margin-top:.4rem;font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+        .loading{text-align:center;padding:3rem}
+        .spinner{width:40px;height:40px;border:3px solid #e2e8f0;border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .loading-text{color:#64748b;font-size:.85rem}
+        .error-msg{text-align:center;padding:2rem}
+        .error-msg p{color:#64748b;font-size:.85rem;margin-top:.5rem}
+        .footer{text-align:center;padding:1rem 2rem 1.5rem;border-top:1px solid #f1f5f9}
+        .footer p{font-size:.68rem;color:#94a3b8}
+    </style>
+</head>
+<body>
+    <div class="verify-card">
+        <div class="card-header">
+            <div class="logo">₹</div>
+            <h1>PayNest Pro Solutions</h1>
+            <p>Salary Slip Verification Portal</p>
+        </div>
+        <div class="card-body" id="cardBody">
+            <div class="loading" id="loadingState">
+                <div class="spinner"></div>
+                <p class="loading-text">Verifying salary slip authenticity...</p>
+            </div>
+        </div>
+        <div class="footer">
+            <p>This verification is provided by PayNest Pro Solutions.<br>For queries, contact hr@paynest.pro</p>
+        </div>
+    </div>
+
+    <script>
+        async function verifySlip() {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+            const body = document.getElementById('cardBody');
+
+            if (!token) {
+                body.innerHTML = `<div class="error-msg"><div class="status-icon" style="font-size:3rem">⚠️</div><p>No verification token provided.</p></div>`;
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/pdf/verify/' + token);
+                const data = await res.json();
+
+                if (!data.valid) {
+                    body.innerHTML = `
+                        <div class="status-container">
+                            <div class="status-badge status-invalid"><span class="status-icon">✗</span> INVALID SLIP</div>
+                        </div>
+                        <div class="error-msg"><p>${data.message || 'This salary slip could not be verified. It may be tampered or does not exist.'}</p></div>`;
+                    return;
+                }
+
+                const pBadge = data.paymentStatus === 'paid'
+                    ? '<span class="payment-badge badge-paid">✓ Paid</span>'
+                    : data.paymentStatus === 'processing'
+                    ? '<span class="payment-badge badge-processing">⏳ Processing</span>'
+                    : '<span class="payment-badge badge-pending">⏳ Pending</span>';
+
+                const genDate = new Date(data.generatedAt).toLocaleString('en-IN', {
+                    day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'
+                });
+
+                const salary = parseFloat(data.finalSalary||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+                body.innerHTML = `
+                    <div class="status-container">
+                        <div class="status-badge status-valid"><span class="status-icon">✓</span> VERIFIED & AUTHENTIC</div>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-row"><span class="info-label">Slip ID</span><span class="info-value">${data.slipId}</span></div>
+                        <div class="info-row"><span class="info-label">Employee</span><span class="info-value">${data.employeeName}</span></div>
+                        <div class="info-row"><span class="info-label">Employee ID</span><span class="info-value">${data.employeeId||'—'}</span></div>
+                        <div class="info-row"><span class="info-label">Department</span><span class="info-value">${data.department||'—'}</span></div>
+                        <div class="info-row"><span class="info-label">Payroll Month</span><span class="info-value">${data.payrollMonth}</span></div>
+                        <div class="info-row"><span class="info-label">Net Salary</span><span class="info-value salary">₹${salary}</span></div>
+                        <div class="info-row"><span class="info-label">Payment Status</span><span class="info-value">${pBadge}</span></div>
+                        <div class="info-row"><span class="info-label">Transaction ID</span><span class="info-value">${data.transactionId||'—'}</span></div>
+                        <div class="info-row"><span class="info-label">Generated</span><span class="info-value">${genDate}</span></div>
+                    </div>
+                    <div class="seal">
+                        <div class="seal-icon">🛡️</div>
+                        <div class="seal-text">Digitally Verified by PayNest Pro Solutions</div>
+                    </div>`;
+            } catch (e) {
+                body.innerHTML = `<div class="error-msg"><div style="font-size:3rem">❌</div><p>Verification failed. Please try again later.</p></div>`;
+            }
+        }
+        verifySlip();
+    </script>
+</body>
+</html>

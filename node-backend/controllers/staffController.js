@@ -132,13 +132,15 @@ exports.deleteAllStaff = async (req, res, next) => {
 exports.paySalary = async (req, res, next) => {
     try {
         const staffId = req.params.id;
-        const staff = await StaffModel.findById(staffId);
+        let staff = await StaffModel.findById(staffId);
         if (!staff) return res.status(404).json({ error: 'Staff not found' });
 
         const affectedRows = await StaffModel.paySalary(staffId);
-        if (affectedRows === 0) return res.status(404).json({ error: 'Staff not found' });
+        if (affectedRows === 0) return res.status(400).json({ error: 'Already paid or not found' });
         
-        if (staff.payroll_id) {
+        // Re-fetch after payment to get updated status/date/time
+        staff = await StaffModel.findById(staffId);
+        if (staff && staff.payroll_id) {
             await pdfController.generateAndSaveSlip(staff, staff.payroll_id);
         }
 
@@ -154,9 +156,10 @@ exports.payBulkSalary = async (req, res, next) => {
         }
         const affectedRows = await StaffModel.payBulkSalary(ids);
 
+        // Re-fetch after payment to get updated data for PDF
         for (const staffId of ids) {
             const staff = await StaffModel.findById(staffId);
-            if (staff && staff.payroll_id) {
+            if (staff && staff.payroll_id && staff.payment_status === 'paid') {
                 try {
                     await pdfController.generateAndSaveSlip(staff, staff.payroll_id);
                 } catch(e) {

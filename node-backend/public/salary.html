@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Salary Slips - PayNest Pro</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="description" content="Enterprise salary slip management with PDF export and QR verification.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <style>
         .salary-summary {
@@ -18,49 +19,58 @@
         .summary-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.2rem;
+            border-radius: 14px;
+            padding: 1.2rem 1.4rem;
             backdrop-filter: blur(12px);
             transition: transform .2s, box-shadow .2s;
+            position: relative;
+            overflow: hidden;
         }
 
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 14px 14px 0 0;
+        }
+
+        .summary-card:nth-child(1)::before { background: linear-gradient(90deg, #3b82f6, #6366f1); }
+        .summary-card:nth-child(2)::before { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+        .summary-card:nth-child(3)::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .summary-card:nth-child(4)::before { background: linear-gradient(90deg, #22c55e, #16a34a); }
+
         .summary-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.08);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(59, 130, 246, 0.1);
         }
 
         .summary-card .label {
-            font-size: .75rem;
+            font-size: .72rem;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: .04em;
-            margin-bottom: .4rem;
+            letter-spacing: .06em;
+            margin-bottom: .5rem;
+            font-weight: 600;
         }
 
         .summary-card .value {
-            font-size: 1.4rem;
-            font-weight: 700;
+            font-size: 1.5rem;
+            font-weight: 800;
         }
 
-        .summary-card .value.primary {
-            color: var(--primary);
-        }
-
-        .summary-card .value.success {
-            color: var(--success);
-        }
-
-        .summary-card .value.danger {
-            color: var(--danger);
-        }
-
-        .summary-card .value.warn {
-            color: #f59e0b;
-        }
+        .summary-card .value.primary { color: var(--primary); }
+        .summary-card .value.success { color: var(--success); }
+        .summary-card .value.danger { color: var(--danger); }
+        .summary-card .value.warn { color: #f59e0b; }
 
         .salary-table th {
             white-space: nowrap;
-            font-size: .78rem;
+            font-size: .76rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
         }
 
         .salary-table td {
@@ -68,81 +78,18 @@
             vertical-align: middle;
         }
 
-        .emp-info {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
+        .emp-info { display: flex; flex-direction: column; gap: 2px; }
+        .emp-name { font-weight: 600; color: var(--text-main); }
+        .emp-id { font-size: .7rem; color: var(--text-muted); }
+        .emp-qual { font-size: .66rem; color: var(--primary); opacity: .75; margin-top: 1px; }
 
-        .emp-name {
-            font-weight: 600;
-            color: var(--text-main);
-        }
+        .emp-qual { font-size: .66rem; color: var(--primary); opacity: .75; margin-top: 1px; }
 
-        .emp-id {
-            font-size: .7rem;
-            color: var(--text-muted);
-        }
+        .salary-breakdown { display: flex; flex-direction: column; gap: 2px; font-size: .74rem; }
+        .salary-ded { color: var(--danger); }
+        .salary-pf { color: #f59e0b; }
 
-        .emp-qual {
-            font-size: .68rem;
-            color: var(--primary);
-            opacity: .8;
-        }
-
-        .leave-cell {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .leave-row {
-            display: flex;
-            gap: .5rem;
-            font-size: .72rem;
-        }
-
-        .leave-tag {
-            padding: .1rem .4rem;
-            border-radius: 6px;
-            font-weight: 500;
-        }
-
-        .leave-paid {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-        }
-
-        .leave-unpaid {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-        }
-
-        .salary-breakdown {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            font-size: .75rem;
-        }
-
-        .salary-gross {
-            color: var(--text-muted);
-        }
-
-        .salary-ded {
-            color: var(--danger);
-        }
-
-        .salary-pf {
-            color: #f59e0b;
-        }
-
-        .final-salary {
-            font-weight: 700;
-            font-size: 1rem;
-            color: var(--success);
-            white-space: nowrap;
-        }
+        .final-salary { font-weight: 800; font-size: 1rem; color: var(--success); white-space: nowrap; }
 
         .toolbar {
             display: flex;
@@ -153,22 +100,12 @@
             margin-bottom: 1.5rem;
         }
 
-        .toolbar .search-bar {
-            flex: 1;
-            min-width: 200px;
-            max-width: 400px;
-        }
+        .toolbar .search-bar { flex: 1; min-width: 200px; max-width: 400px; }
 
-        .month-filter {
-            display: flex;
-            gap: .5rem;
-            align-items: center;
-        }
-
+        .month-filter { display: flex; gap: .5rem; align-items: center; }
         .month-filter select {
             appearance: none;
             -webkit-appearance: none;
-            -moz-appearance: none;
             background-color: var(--card-bg);
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
             background-repeat: no-repeat;
@@ -182,15 +119,57 @@
             font-family: inherit;
             cursor: pointer;
             outline: none;
+            transition: border-color .2s;
         }
 
-        .month-filter select:focus {
-            border-color: var(--primary);
-        }
+        .month-filter select:focus { border-color: var(--primary); }
+        .month-filter select option { background-color: #0d1229; color: #f8fafc; }
 
-        .month-filter select option {
-            background-color: #0d1229;
-            color: #f8fafc;
+        /* Status badges */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            padding: .25rem .65rem;
+            border-radius: 20px;
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .02em;
+        }
+        .status-paid { background: rgba(34,197,94,.12); color: #16a34a; }
+        .status-pending { background: rgba(239,68,68,.12); color: #ef4444; }
+        .status-processing { background: rgba(245,158,11,.12); color: #d97706; }
+        .status-failed { background: rgba(220,38,38,.12); color: #dc2626; }
+
+        /* Download button */
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            border: none;
+            padding: .4rem .85rem;
+            border-radius: 8px;
+            font-size: .75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+            font-family: inherit;
+            box-shadow: 0 2px 8px rgba(37,99,235,.25);
+        }
+        .btn-download:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(37,99,235,.35);
+        }
+        .btn-download:active { transform: scale(.97); }
+        .slip-unavailable {
+            font-size: .7rem;
+            color: var(--text-muted);
+            background: rgba(148,163,184,.08);
+            padding: .3rem .6rem;
+            border-radius: 6px;
+            display: inline-block;
         }
     </style>
 </head>
@@ -245,7 +224,7 @@
             <div class="toolbar">
                 <div class="search-bar">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" placeholder="Search by ID, name, role, department, section..."
+                    <input type="text" id="searchInput" placeholder="Search by ID, name, role, department..."
                         oninput="filterSalary()">
                 </div>
                 <div class="month-filter">
@@ -270,24 +249,9 @@
             <!-- TABLE -->
             <div class="card">
                 <div id="skeletonLoader">
-                    <div class="skeleton-row">
-                        <div class="skeleton"></div>
-                        <div class="skeleton"></div>
-                        <div class="skeleton"></div>
-                        <div class="skeleton"></div>
-                    </div>
-                    <div class="skeleton-row">
-                        <div class="skeleton"></div>
-                        <div class="skeleton"></div>
-                        <div class="skeleton"></div>
-                        <div class="skeleton"></div>
-                    </div>
-                    <div class="skeleton-row">
-                        <div class="skeleton"></div>
-                        <div class="skeleton"></div>
-                        <div class="skeleton"></div>
-                        <div class="skeleton"></div>
-                    </div>
+                    <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+                    <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+                    <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
                 </div>
                 <div id="emptyState" class="empty-state" style="display:none">
                     <span class="empty-icon">💵</span>
@@ -298,14 +262,12 @@
                         <thead>
                             <tr>
                                 <th>Employee</th>
-                                <th>Role</th>
-                                <th>Section</th>
+                                <th>Dept / Role</th>
                                 <th>Gross</th>
-                                <th>Leaves</th>
                                 <th>Deductions</th>
-                                <th>Final Salary</th>
+                                <th>Net Salary</th>
                                 <th>Status</th>
-                                <th>Slip</th>
+                                <th>Salary Slip</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -322,15 +284,21 @@
         if (!token) window.location.href = '/login.html';
         let allStaff = [];
 
-        function logout() { localStorage.removeItem('token'); window.location.href = '/login.html' }
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('active') }
-        function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('active') }
-        function showToast(msg, type = 'info') { const c = document.getElementById('toastContainer'); const t = document.createElement('div'); t.className = 'toast toast-' + type; t.textContent = msg; c.appendChild(t); setTimeout(() => t.remove(), 3500) }
+        function logout() { localStorage.removeItem('token'); window.location.href = '/login.html'; }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('active'); }
+        function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('active'); }
+        function showToast(msg, type = 'info') {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = 'toast toast-' + type;
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 3500);
+        }
 
-        const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-        // Smart month matching: "Aug" matches "August", "august", "Mar" matches "March", etc.
         function monthMatches(staffMonth, filterMonth) {
             if (!staffMonth || !filterMonth) return false;
             const s = staffMonth.trim().toLowerCase();
@@ -340,18 +308,10 @@
             const fIdx = MONTHS_FULL.findIndex(m => m.toLowerCase() === f);
             const sIdx = MONTHS_FULL.findIndex(m => m.toLowerCase() === s);
             if (fIdx >= 0 && fIdx === sIdx) return true;
-            const fShort = MONTHS_SHORT.find(m => m.toLowerCase() === f.substring(0, 3));
             const sShort = s.substring(0, 3);
+            const fShort = MONTHS_SHORT.find(m => m.toLowerCase() === f.substring(0, 3));
             if (fShort && fShort.toLowerCase() === sShort) return true;
             return false;
-        }
-
-        async function loadSalaryData() {
-            try {
-                const res = await fetch('/api/staff', { headers: { 'Authorization': 'Bearer ' + token } });
-                allStaff = await res.json();
-                renderSalary(allStaff);
-            } catch (e) { showToast('Failed to load', 'error') }
         }
 
         /* ── Indian number formatter ── */
@@ -360,6 +320,14 @@
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
             });
+        }
+
+        async function loadSalaryData() {
+            try {
+                const res = await fetch('/api/staff', { headers: { 'Authorization': 'Bearer ' + token } });
+                allStaff = await res.json();
+                renderSalary(allStaff);
+            } catch (e) { showToast('Failed to load data', 'error'); }
         }
 
         function updateSummary(list) {
@@ -376,54 +344,40 @@
             document.getElementById('skeletonLoader').style.display = 'none';
             const table = document.getElementById('salaryTable');
             const empty = document.getElementById('emptyState');
-            if (!list.length) { table.style.display = 'none'; empty.style.display = 'block'; updateSummary([]); return }
+            if (!list.length) { table.style.display = 'none'; empty.style.display = 'block'; updateSummary([]); return; }
             table.style.display = 'table'; empty.style.display = 'none';
             updateSummary(list);
 
             table.querySelector('tbody').innerHTML = list.map(s => {
                 const cl = s.cl_taken || 0, med = s.medical_taken || 0, pers = s.personal_leave || 0;
-                const unpaid = s.unpaid_leaves || 0;
-                const paidLeaves = (cl + med) - unpaid + (unpaid > 0 ? 0 : 0);
                 const ded = s.deduction || 0;
                 const pfTax = (s.pf || 0) + (s.tax || 0);
                 const totalDed = ded + pfTax;
                 const gross = s.gross || 0;
                 const final_salary = s.final_salary || 0;
 
-                // Leave display
-                let leaveHtml = '<div class="leave-cell">';
-                if (cl > 0) leaveHtml += `<div class="leave-row"><span class="leave-tag leave-paid">CL: ${cl}</span></div>`;
-                if (med > 0) leaveHtml += `<div class="leave-row"><span class="leave-tag leave-paid">Med: ${med}</span></div>`;
-                if (pers > 0) leaveHtml += `<div class="leave-row"><span class="leave-tag leave-unpaid">PL: ${pers}</span></div>`;
-                if (unpaid > 0) leaveHtml += `<div class="leave-row"><span class="leave-tag leave-unpaid">${unpaid} unpaid</span></div>`;
-                if (cl === 0 && med === 0 && pers === 0) leaveHtml += '<span style="color:var(--text-muted);font-size:.75rem">No leaves</span>';
-                leaveHtml += '</div>';
-
                 // Deduction breakdown
                 let dedHtml = '<div class="salary-breakdown">';
                 if (ded > 0) dedHtml += `<span class="salary-ded">Leave: -${inrFmt(ded)}</span>`;
                 if (s.pf > 0) dedHtml += `<span class="salary-pf">PF: -${inrFmt(s.pf)}</span>`;
                 if (s.tax > 0) dedHtml += `<span class="salary-pf">Tax: -${inrFmt(s.tax)}</span>`;
-                if (totalDed === 0) dedHtml += `<span style="color:var(--text-muted)">₹0.00</span>`;
+                if (totalDed === 0) dedHtml += '<span style="color:var(--text-muted)">₹0.00</span>';
                 dedHtml += '</div>';
 
                 // Status badge
-                let statusBadge = '';
                 const pStatus = (s.payment_status || 'pending').toLowerCase();
-                if (pStatus === 'paid') {
-                    statusBadge = '<span class="leave-tag leave-paid" style="padding:.2rem .5rem">✅ Paid</span>';
-                } else if (pStatus === 'processing') {
-                    statusBadge = '<span class="leave-tag" style="background:rgba(245,158,11,.1);color:#f59e0b;padding:.2rem .5rem">⏳ Processing</span>';
-                } else {
-                    statusBadge = '<span class="leave-tag leave-unpaid" style="padding:.2rem .5rem">⏳ Pending</span>';
-                }
+                let statusHtml = '';
+                if (pStatus === 'paid') statusHtml = '<span class="status-pill status-paid">✓ Paid</span>';
+                else if (pStatus === 'processing') statusHtml = '<span class="status-pill status-processing">⏳ Processing</span>';
+                else if (pStatus === 'failed') statusHtml = '<span class="status-pill status-failed">✗ Failed</span>';
+                else statusHtml = '<span class="status-pill status-pending">⏳ Pending</span>';
 
                 // Slip action
                 let slipHtml = '';
                 if (pStatus === 'paid') {
-                    slipHtml = `<button class="btn btn-success btn-sm" onclick="downloadPDF(${s.id},'${s.name.replace(/'/g, "\\'")}')">📥 Download PDF</button>`;
+                    slipHtml = `<button class="btn-download" onclick="downloadPDF(${s.id},'${s.name.replace(/'/g, "\\'")}')">📥 Download PDF</button>`;
                 } else {
-                    slipHtml = '<span style="font-size: .7rem; color: var(--text-muted);">Slip not available until payment is completed</span>';
+                    slipHtml = '<span class="slip-unavailable">Available after payment</span>';
                 }
 
                 return `<tr>
@@ -431,17 +385,22 @@
                         <div class="emp-info">
                             <span class="emp-name">${s.name}</span>
                             <span class="emp-id">${s.employee_id || '#' + s.id}</span>
+                            ${s.section ? `<span class="emp-qual">${s.section}</span>` : ''}
                         </div>
                     </td>
-                    <td style="color:var(--text-muted)">${s.role || '-'}</td>
-                    <td><span class="badge">${s.section || '—'}</span></td>
+                    <td>
+                        <div style="display:flex;flex-direction:column;gap:2px">
+                            <span style="font-weight:500;color:var(--text-main);font-size:.8rem">${s.department || '—'}</span>
+                            <span style="color:var(--text-muted);font-size:.72rem">${s.role || '—'}</span>
+                        </div>
+                    </td>
                     <td style="font-weight:600">${inrFmt(gross)}</td>
-                    <td>${leaveHtml}</td>
                     <td>${dedHtml}</td>
                     <td><span class="final-salary">${inrFmt(final_salary)}</span></td>
-                    <td>${statusBadge}</td>
+                    <td>${statusHtml}</td>
                     <td>${slipHtml}</td>
-                </tr>`}).join('');
+                </tr>`;
+            }).join('');
         }
 
         function filterSalary() {
@@ -461,20 +420,31 @@
         }
 
         function downloadPDF(id, name) {
-            showToast('Downloading PDF...', 'info');
-            const downloadUrl = '/api/pdf/' + id + '?token=' + token;
-            let iframe = document.getElementById('downloadFrame');
-            if (!iframe) {
-                iframe = document.createElement('iframe');
-                iframe.id = 'downloadFrame';
-                iframe.style.display = 'none';
-                document.body.appendChild(iframe);
-            }
-            iframe.src = downloadUrl;
-            setTimeout(function () { showToast('PDF downloaded!', 'success'); }, 1500);
+            showToast('Downloading salary slip...', 'info');
+            fetch('/api/pdf/' + id, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Download failed');
+                return res.blob();
+            })
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `SalarySlip_${name.replace(/\s+/g, '_')}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                showToast('Salary slip downloaded!', 'success');
+            })
+            .catch(e => showToast('Download failed: ' + e.message, 'error'));
         }
 
+        // Auto-refresh every 30 seconds
         loadSalaryData();
+        setInterval(loadSalaryData, 30000);
     </script>
 </body>
 

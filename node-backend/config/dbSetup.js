@@ -42,10 +42,13 @@ const setupDB = async () => {
                 role VARCHAR(100) DEFAULT '',
                 department VARCHAR(255) NOT NULL,
                 section VARCHAR(100) DEFAULT '',
+                qualification VARCHAR(255) DEFAULT '',
                 salary_type VARCHAR(50) DEFAULT 'Monthly',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
+        // Add qualification column if missing
+        try { await connection.query('ALTER TABLE staff ADD COLUMN qualification VARCHAR(255) DEFAULT \'\''); } catch (e) {}
         console.log('Table `staff` created.');
 
         // 3. Create payroll table
@@ -83,10 +86,12 @@ const setupDB = async () => {
 
         console.log('Table `payroll` verified/created.');
 
-        // 3.5. Create salary_slips table
+        // 3.5. Create salary_slips table (upgraded with slip_id and verification)
         await connection.query(`
             CREATE TABLE IF NOT EXISTS salary_slips (
                 id INT AUTO_INCREMENT PRIMARY KEY,
+                slip_id VARCHAR(100) UNIQUE NOT NULL,
+                verification_token VARCHAR(100) UNIQUE NOT NULL,
                 staff_id INT NOT NULL,
                 payroll_id INT NOT NULL,
                 pdf_path VARCHAR(500) NOT NULL,
@@ -95,6 +100,9 @@ const setupDB = async () => {
                 FOREIGN KEY (payroll_id) REFERENCES payroll(id) ON DELETE CASCADE
             );
         `);
+        // Add new columns if table already existed without them
+        try { await connection.query('ALTER TABLE salary_slips ADD COLUMN slip_id VARCHAR(100) UNIQUE NOT NULL AFTER id'); } catch (e) {}
+        try { await connection.query('ALTER TABLE salary_slips ADD COLUMN verification_token VARCHAR(100) UNIQUE NOT NULL AFTER slip_id'); } catch (e) {}
         console.log('Table `salary_slips` verified/created.');
 
         // 4. Create admin_logs table
@@ -146,4 +154,3 @@ module.exports = setupDB;
 if (require.main === module) {
     setupDB();
 }
-
