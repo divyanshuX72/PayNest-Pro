@@ -41,7 +41,7 @@ class StaffModel {
                 SELECT * FROM payroll 
                 WHERE id IN (SELECT MAX(id) FROM payroll GROUP BY staff_id)
             ) p ON p.staff_id = s.id
-            ORDER BY s.id DESC
+            ORDER BY s.name ASC
         `);
         return rows;
     }
@@ -331,7 +331,7 @@ class StaffModel {
             SELECT p.id, s.name, s.role, s.department, s.section, p.final_salary, p.created_at 
             FROM payroll p
             JOIN staff s ON p.staff_id = s.id
-            ORDER BY p.created_at DESC, p.id DESC LIMIT 5
+            ORDER BY s.name ASC LIMIT 5
         `);
 
         const [recentlyPaid] = await pool.query(`
