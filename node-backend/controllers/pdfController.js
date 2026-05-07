@@ -1,14 +1,11 @@
-const PDFDocument = require('pdfkit');
-const StaffModel  = require('../models/staffModel');
+const fs = require('fs');
+const path = require('path');
+const { pool } = require('../config/db');
 
 /* ── Indian number formatter ─────────────────────────────────────────────── */
 function inr(amount) {
     const num = parseFloat(amount || 0);
-    // toLocaleString with 'en-IN' gives proper Indian comma grouping
-    return '₹' + num.toLocaleString('en-IN', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
+    return '₹' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 /* ── Draw a horizontal rule ─────────────────────────────────────────────── */
@@ -20,10 +17,8 @@ function rule(doc, color = '#e2e8f0') {
 /* ── Draw a section heading ──────────────────────────────────────────────── */
 function sectionHeading(doc, text) {
     doc.moveDown(0.3);
-    // Blue accent bar
     doc.rect(40, doc.y, 3, 14).fillColor('#3b82f6').fill();
-    doc.fillColor('#1e293b').font('Helvetica-Bold').fontSize(10)
-       .text(text, 52, doc.y, { lineBreak: false });
+    doc.fillColor('#1e293b').font('Helvetica-Bold').fontSize(10).text(text, 52, doc.y, { lineBreak: false });
     doc.moveDown(1.1);
 }
 
@@ -33,113 +28,75 @@ function infoRow(doc, label, value, y) {
     doc.font('Helvetica').fontSize(9).fillColor('#1e293b').text(String(value), 180, y, { width: 180 });
 }
 
-/* ── Draw earnings / deductions table row ────────────────────────────────── */
-function tableRow(doc, label, amount, y, isTotal = false, color = '#1e293b') {
-    if (isTotal) {
-        doc.rect(40, y - 2, 530, 18).fillColor('#f1f5f9').fill();
-        doc.font('Helvetica-Bold').fontSize(9.5);
-    } else {
-        doc.font('Helvetica').fontSize(9);
-    }
-    doc.fillColor(color).text(label, 55, y, { width: 300 });
-    doc.fillColor(color).text(amount, 0, y, { align: 'right', width: 510 });
-    doc.moveDown(0.1);
-}
+function buildPdfDoc(doc, staff, transactionId = 'N/A') {
+    const PAGE_W = 595;
+    const PAGE_H = 842;
 
-/* ─────────────────────────────────────────────────────────────────────────── */
-exports.generateSlip = async (req, res, next) => {
-    try {
-        const staff = await StaffModel.findById(req.params.id);
-        if (!staff) return res.status(404).json({ error: 'Staff not found' });
+    doc.rect(0, 0, PAGE_W, PAGE_H).fillColor('#ffffff').fill();
+    doc.rect(0, 0, PAGE_W, 6).fillColor('#3b82f6').fill();
 
-        const safeName = staff.name.replace(/[^a-zA-Z0-9_ ]/g, '').replace(/\s+/g, '_');
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
-        res.setHeader('Content-Disposition', `attachment; filename="Salary_Slip_${safeName}.pdf"`);
+    let y = 30;
+    doc.circle(PAGE_W / 2, y + 20, 22).fillColor('#3b82f6').fill();
+    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(14).text('₹', (PAGE_W / 2) - 7, y + 12);
+    
+    y += 55;
+    doc.fillColor('#1e293b').font('Helvetica-Bold').fontSize(20).text('PayNest Pro', 40, y, { align: 'center', width: PAGE_W - 80 });
+    y += 26;
+    doc.fillColor('#64748b').font('Helvetica').fontSize(11).text('SALARY SLIP', 40, y, { align: 'center', width: PAGE_W - 80, characterSpacing: 2 });
+    y += 18;
 
-        const doc = new PDFDocument({ margin: 0, size: 'A4' });
-        doc.pipe(res);
+    const monthLabel = staff.month ? `Month: ${staff.month} · ${new Date().getFullYear()}` : `Date: ${new Date().toLocaleDateString('en-IN')}`;
+    const badgeW = 160, badgeH = 20, badgeX = (PAGE_W - badgeW) / 2;
+    doc.roundedRect(badgeX, y, badgeW, badgeH, 10).fillColor('#eff6ff').fill();
+    doc.fillColor('#3b82f6').font('Helvetica').fontSize(9).text(monthLabel, badgeX, y + 5, { width: badgeW, align: 'center' });
+    y += 32;
 
-        const PAGE_W = 595;
-        const PAGE_H = 842;
+    doc.y = y;
+    rule(doc, '#cbd5e1');
 
-        /* ── Background ──────────────────────────────────────────────────── */
-        doc.rect(0, 0, PAGE_W, PAGE_H).fillColor('#ffffff').fill();
+    sectionHeading(doc, 'EMPLOYEE DETAILS');
+    const boxStart = doc.y - 4;
+    doc.rect(40, boxStart, 515, 82).fillColor('#f8fafc').roundedRect(40, boxStart, 515, 82, 4).fill();
+    doc.strokeColor('#e2e8f0').lineWidth(0.5).roundedRect(40, boxStart, 515, 82, 4).stroke();
 
-        /* ── Top accent stripe ───────────────────────────────────────────── */
-        doc.rect(0, 0, PAGE_W, 6).fillColor('#3b82f6').fill();
+    const r1y = boxStart + 8;
+    const r2y = r1y + 20;
+    const r3y = r2y + 20;
+    const r4y = r3y + 20;
 
-        /* ── HEADER BLOCK ────────────────────────────────────────────────── */
-        let y = 30;
+    infoRow(doc, 'Name', staff.name, r1y);
+    infoRow(doc, 'Department', staff.department || '—', r2y);
+    infoRow(doc, 'Salary Type', staff.salary_type || 'Monthly', r3y);
+    infoRow(doc, 'Employee ID', staff.employee_id || ('#' + staff.id), r4y);
 
-        // Logo circle
-        doc.circle(PAGE_W / 2, y + 20, 22).fillColor('#3b82f6').fill();
-        doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(14)
-           .text('₹', (PAGE_W / 2) - 7, y + 12);
+    const col2x = 310;
+    doc.font('Helvetica').fontSize(9).fillColor('#64748b').text('Role:', col2x, r1y, { width: 80 });
+    doc.font('Helvetica').fontSize(9).fillColor('#1e293b').text(staff.role || '—', col2x + 50, r1y, { width: 160 });
+    doc.font('Helvetica').fontSize(9).fillColor('#64748b').text('Section:', col2x, r2y, { width: 80 });
+    doc.font('Helvetica').fontSize(9).fillColor('#1e293b').text(staff.section || '—', col2x + 50, r2y, { width: 160 });
+    doc.font('Helvetica').fontSize(9).fillColor('#64748b').text('Status:', col2x, r3y, { width: 80 });
+    doc.font('Helvetica').fontSize(9).fillColor('#1e293b').text(staff.status || 'Active', col2x + 50, r3y, { width: 160 });
+    doc.font('Helvetica').fontSize(9).fillColor('#64748b').text('Date:', col2x, r4y, { width: 80 });
+    doc.font('Helvetica').fontSize(9).fillColor('#1e293b').text(new Date().toLocaleDateString('en-IN'), col2x + 50, r4y, { width: 160 });
 
-        y += 55;
+    doc.y = boxStart + 90;
+    doc.moveDown(0.5);
+    rule(doc, '#e2e8f0');
 
-        // Company name
-        doc.fillColor('#1e293b').font('Helvetica-Bold').fontSize(20)
-           .text('PayNest Pro', 40, y, { align: 'center', width: PAGE_W - 80 });
-        y += 26;
+    sectionHeading(doc, 'PAYMENT DETAILS');
+    const payStart = doc.y - 4;
+    doc.rect(40, payStart, 515, 42).fillColor('#f8fafc').roundedRect(40, payStart, 515, 42, 4).fill();
+    doc.strokeColor('#e2e8f0').lineWidth(0.5).roundedRect(40, payStart, 515, 42, 4).stroke();
+    infoRow(doc, 'Payment Date', new Date().toLocaleString('en-IN'), payStart + 8);
+    infoRow(doc, 'Transaction ID', transactionId, payStart + 28);
+    
+    doc.y = payStart + 50;
+    doc.moveDown(0.5);
+    rule(doc, '#e2e8f0');
 
-        // Subtitle
-        doc.fillColor('#64748b').font('Helvetica').fontSize(11)
-           .text('SALARY SLIP', 40, y, { align: 'center', width: PAGE_W - 80, characterSpacing: 2 });
-        y += 18;
+    sectionHeading(doc, 'ATTENDANCE & LEAVE');
 
-        // Month badge
-        const monthLabel = staff.month ? `Month: ${staff.month} · ${new Date().getFullYear()}` : `Date: ${new Date().toLocaleDateString('en-IN')}`;
-        const badgeW = 160, badgeH = 20, badgeX = (PAGE_W - badgeW) / 2;
-        doc.roundedRect(badgeX, y, badgeW, badgeH, 10)
-           .fillColor('#eff6ff').fill();
-        doc.fillColor('#3b82f6').font('Helvetica').fontSize(9)
-           .text(monthLabel, badgeX, y + 5, { width: badgeW, align: 'center' });
-        y += 32;
 
-        doc.y = y;
-        rule(doc, '#cbd5e1');
-
-        /* ── EMPLOYEE DETAILS ────────────────────────────────────────────── */
-        sectionHeading(doc, 'EMPLOYEE DETAILS');
-
-        // Light box background
-        const boxStart = doc.y - 4;
-        doc.rect(40, boxStart, 515, 82).fillColor('#f8fafc').roundedRect(40, boxStart, 515, 82, 4).fill();
-        doc.strokeColor('#e2e8f0').lineWidth(0.5).roundedRect(40, boxStart, 515, 82, 4).stroke();
-
-        const r1y = boxStart + 8;
-        const r2y = r1y + 20;
-        const r3y = r2y + 20;
-        const r4y = r3y + 20;
-
-        // Col 1
-        infoRow(doc, 'Name',        staff.name,                       r1y);
-        infoRow(doc, 'Department',  staff.department || '—',          r2y);
-        infoRow(doc, 'Salary Type', staff.salary_type || 'Monthly',   r3y);
-        infoRow(doc, 'Employee ID', staff.employee_id || ('#' + staff.id), r4y);
-
-        // Col 2
-        const col2x = 310;
-        doc.font('Helvetica').fontSize(9).fillColor('#64748b').text('Role:',       col2x, r1y, { width: 80 });
-        doc.font('Helvetica').fontSize(9).fillColor('#1e293b').text(staff.role || '—', col2x + 50, r1y, { width: 160 });
-
-        doc.font('Helvetica').fontSize(9).fillColor('#64748b').text('Section:',    col2x, r2y, { width: 80 });
-        doc.font('Helvetica').fontSize(9).fillColor('#1e293b').text(staff.section || '—', col2x + 50, r2y, { width: 160 });
-
-        doc.font('Helvetica').fontSize(9).fillColor('#64748b').text('Status:',     col2x, r3y, { width: 80 });
-        doc.font('Helvetica').fontSize(9).fillColor('#1e293b').text(staff.status || 'Active', col2x + 50, r3y, { width: 160 });
-
-        doc.font('Helvetica').fontSize(9).fillColor('#64748b').text('Date:',       col2x, r4y, { width: 80 });
-        doc.font('Helvetica').fontSize(9).fillColor('#1e293b').text(new Date().toLocaleDateString('en-IN'), col2x + 50, r4y, { width: 160 });
-
-        doc.y = boxStart + 90;
-        doc.moveDown(0.5);
-        rule(doc, '#e2e8f0');
-
-        /* ── ATTENDANCE & LEAVE ──────────────────────────────────────────── */
-        sectionHeading(doc, 'ATTENDANCE & LEAVE');
 
         const attStart = doc.y - 4;
         doc.rect(40, attStart, 515, 62).fillColor('#f8fafc').roundedRect(40, attStart, 515, 62, 4).fill();
@@ -284,25 +241,71 @@ exports.generateSlip = async (req, res, next) => {
         /* ── IN WORDS ────────────────────────────────────────────────────── */
         rule(doc, '#e2e8f0');
 
-        /* ── FOOTER ──────────────────────────────────────────────────────── */
-        // Footer stripe
         const footY = PAGE_H - 50;
         doc.rect(0, footY, PAGE_W, 50).fillColor('#f8fafc').fill();
         doc.rect(0, footY, PAGE_W, 1).fillColor('#cbd5e1').fill();
 
         doc.font('Helvetica').fontSize(8).fillColor('#94a3b8')
-           .text('This is a system-generated salary slip and does not require a signature.', 40, footY + 12, {
-               align: 'center', width: PAGE_W - 80,
-           });
+           .text('This is a system-generated salary slip and does not require a signature.', 40, footY + 12, { align: 'center', width: PAGE_W - 80 });
         doc.font('Helvetica').fontSize(7.5).fillColor('#cbd5e1')
-           .text(`Generated on ${new Date().toLocaleString('en-IN')}  ·  PayNest Pro`, 40, footY + 28, {
-               align: 'center', width: PAGE_W - 80,
-           });
+           .text(`Generated on ${new Date().toLocaleString('en-IN')}  ·  PayNest Pro`, 40, footY + 28, { align: 'center', width: PAGE_W - 80 });
 
-        // Bottom accent stripe
         doc.rect(0, PAGE_H - 6, PAGE_W, 6).fillColor('#3b82f6').fill();
+}
 
-        doc.end();
+exports.generateAndSaveSlip = async (staff, payroll_id) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const slipsDir = path.join(__dirname, '..', 'public', 'slips');
+            if (!fs.existsSync(slipsDir)) {
+                fs.mkdirSync(slipsDir, { recursive: true });
+            }
+
+            const transaction_id = 'TXN-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+            const safeName = staff.name.replace(/[^a-zA-Z0-9_ ]/g, '').replace(/\s+/g, '_');
+            const fileName = `slip_${payroll_id}_${safeName}_${Date.now()}.pdf`;
+            const filePath = path.join(slipsDir, fileName);
+            const dbPath = `/slips/${fileName}`;
+
+            const PDFDocument = require('pdfkit');
+            const doc = new PDFDocument({ margin: 0, size: 'A4' });
+            const stream = fs.createWriteStream(filePath);
+            doc.pipe(stream);
+
+            buildPdfDoc(doc, staff, transaction_id);
+            doc.end();
+
+            stream.on('finish', async () => {
+                try {
+                    await pool.query('UPDATE payroll SET transaction_id = ?, slip_generated = ? WHERE id = ?', [transaction_id, true, payroll_id]);
+                    await pool.query('INSERT INTO salary_slips (staff_id, payroll_id, pdf_path) VALUES (?, ?, ?)', [staff.id, payroll_id, dbPath]);
+                    resolve(dbPath);
+                } catch(e) { reject(e); }
+            });
+            stream.on('error', reject);
+        } catch (e) { reject(e); }
+    });
+};
+
+exports.generateSlip = async (req, res, next) => {
+    try {
+        const staff_id = req.params.id;
+        const [slips] = await pool.query('SELECT pdf_path FROM salary_slips WHERE staff_id = ? ORDER BY id DESC LIMIT 1', [staff_id]);
+        
+        if (slips.length === 0) {
+            return res.status(404).json({ error: 'Slip not available until payment is completed' });
+        }
+        
+        const pdfPath = path.join(__dirname, '..', 'public', slips[0].pdf_path);
+        if (fs.existsSync(pdfPath)) {
+            const safeName = path.basename(pdfPath);
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+            res.setHeader('Content-Disposition', `attachment; filename="${safeName}"`);
+            fs.createReadStream(pdfPath).pipe(res);
+        } else {
+            res.status(404).json({ error: 'PDF file missing' });
+        }
     } catch (error) {
         next(error);
     }

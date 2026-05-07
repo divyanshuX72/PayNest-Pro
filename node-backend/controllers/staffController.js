@@ -1,4 +1,5 @@
 const StaffModel = require('../models/staffModel');
+const pdfController = require('./pdfController');
 
 // Determine current 6-month cycle: Jan-Jun or Jul-Dec
 const getCurrentCycle = () => {
@@ -130,9 +131,18 @@ exports.deleteAllStaff = async (req, res, next) => {
 
 exports.paySalary = async (req, res, next) => {
     try {
-        const affectedRows = await StaffModel.paySalary(req.params.id);
+        const staffId = req.params.id;
+        const staff = await StaffModel.findById(staffId);
+        if (!staff) return res.status(404).json({ error: 'Staff not found' });
+
+        const affectedRows = await StaffModel.paySalary(staffId);
         if (affectedRows === 0) return res.status(404).json({ error: 'Staff not found' });
-        res.json({ message: 'Salary paid successfully' });
+        
+        if (staff.payroll_id) {
+            await pdfController.generateAndSaveSlip(staff, staff.payroll_id);
+        }
+
+        res.json({ message: 'Salary paid successfully. Salary slip generated.' });
     } catch (error) { next(error); }
 };
 
@@ -143,7 +153,19 @@ exports.payBulkSalary = async (req, res, next) => {
             return res.status(400).json({ error: 'No staff IDs provided' });
         }
         const affectedRows = await StaffModel.payBulkSalary(ids);
-        res.json({ message: `${affectedRows} salaries paid successfully` });
+
+        for (const staffId of ids) {
+            const staff = await StaffModel.findById(staffId);
+            if (staff && staff.payroll_id) {
+                try {
+                    await pdfController.generateAndSaveSlip(staff, staff.payroll_id);
+                } catch(e) {
+                    console.error("PDF generation failed for staff ID: " + staffId, e);
+                }
+            }
+        }
+
+        res.json({ message: `${affectedRows} salaries paid successfully. Salary slips generated.` });
     } catch (error) { next(error); }
 };
 

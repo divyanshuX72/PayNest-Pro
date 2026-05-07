@@ -71,11 +71,31 @@ const setupDB = async () => {
                 payment_status VARCHAR(20) DEFAULT 'pending',
                 paid_date DATE DEFAULT NULL,
                 paid_time TIME DEFAULT NULL,
+                transaction_id VARCHAR(100) DEFAULT NULL,
+                slip_generated BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE CASCADE
             );
         `);
-        console.log('Table `payroll` created.');
+        
+        try { await connection.query('ALTER TABLE payroll ADD COLUMN transaction_id VARCHAR(100) DEFAULT NULL'); } catch (e) {}
+        try { await connection.query('ALTER TABLE payroll ADD COLUMN slip_generated BOOLEAN DEFAULT FALSE'); } catch (e) {}
+
+        console.log('Table `payroll` verified/created.');
+
+        // 3.5. Create salary_slips table
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS salary_slips (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                staff_id INT NOT NULL,
+                payroll_id INT NOT NULL,
+                pdf_path VARCHAR(500) NOT NULL,
+                generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (staff_id) REFERENCES staff(id) ON DELETE CASCADE,
+                FOREIGN KEY (payroll_id) REFERENCES payroll(id) ON DELETE CASCADE
+            );
+        `);
+        console.log('Table `salary_slips` verified/created.');
 
         // 4. Create admin_logs table
         await connection.query(`

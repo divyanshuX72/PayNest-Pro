@@ -691,7 +691,7 @@
                     });
                     updateStats(allStaff);
                     applyFilters();
-                    showToast(`✅ Paid ${ids.length} salaries!`, 'success');
+                    showToast('✅ ' + (data.message || `Paid ${ids.length} salaries!`), 'success');
                 } else {
                     showToast(data.error || 'Payment failed', 'error');
                 }
@@ -745,7 +745,7 @@
                     }
                     updateStats(allStaff);
                     applyFilters();
-                    showToast(`✅ Salary paid successfully!`, 'success');
+                    showToast('✅ ' + (data.message || 'Salary paid successfully!'), 'success');
                 } else {
                     showToast(data.error || 'Payment failed', 'error');
                 }

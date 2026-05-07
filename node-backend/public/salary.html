@@ -304,6 +304,7 @@
                                 <th>Leaves</th>
                                 <th>Deductions</th>
                                 <th>Final Salary</th>
+                                <th>Status</th>
                                 <th>Slip</th>
                             </tr>
                         </thead>
@@ -406,6 +407,25 @@
                 if (totalDed === 0) dedHtml += `<span style="color:var(--text-muted)">₹0.00</span>`;
                 dedHtml += '</div>';
 
+                // Status badge
+                let statusBadge = '';
+                const pStatus = (s.payment_status || 'pending').toLowerCase();
+                if (pStatus === 'paid') {
+                    statusBadge = '<span class="leave-tag leave-paid" style="padding:.2rem .5rem">✅ Paid</span>';
+                } else if (pStatus === 'processing') {
+                    statusBadge = '<span class="leave-tag" style="background:rgba(245,158,11,.1);color:#f59e0b;padding:.2rem .5rem">⏳ Processing</span>';
+                } else {
+                    statusBadge = '<span class="leave-tag leave-unpaid" style="padding:.2rem .5rem">⏳ Pending</span>';
+                }
+
+                // Slip action
+                let slipHtml = '';
+                if (pStatus === 'paid') {
+                    slipHtml = `<button class="btn btn-success btn-sm" onclick="downloadPDF(${s.id},'${s.name.replace(/'/g, "\\'")}')">📥 Download PDF</button>`;
+                } else {
+                    slipHtml = '<span style="font-size: .7rem; color: var(--text-muted);">Slip not available until payment is completed</span>';
+                }
+
                 return `<tr>
                     <td>
                         <div class="emp-info">
@@ -419,7 +439,8 @@
                     <td>${leaveHtml}</td>
                     <td>${dedHtml}</td>
                     <td><span class="final-salary">${inrFmt(final_salary)}</span></td>
-                    <td><button class="btn btn-success btn-sm" onclick="downloadPDF(${s.id},'${s.name.replace(/'/g, "\\'")}')">📥 PDF</button></td>
+                    <td>${statusBadge}</td>
+                    <td>${slipHtml}</td>
                 </tr>`}).join('');
         }
 

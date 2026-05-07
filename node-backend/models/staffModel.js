@@ -235,8 +235,9 @@ class StaffModel {
         const currentYear = new Date().getFullYear();
         // Pay the latest pending payroll for this staff, or create one if none exists?
         // Since we are clicking "Pay Salary" on a staff row, let's update their latest payroll
-        const [payrolls] = await pool.query('SELECT id FROM payroll WHERE staff_id=? ORDER BY id DESC LIMIT 1', [staffId]);
+        const [payrolls] = await pool.query("SELECT id, payment_status FROM payroll WHERE staff_id=? ORDER BY id DESC LIMIT 1", [staffId]);
         if (payrolls.length > 0) {
+            if (payrolls[0].payment_status === 'paid') return 0; // Prevent duplicate payment
             const [result] = await pool.query(
                 "UPDATE payroll SET payment_status='paid', paid_date=?, paid_time=? WHERE id=?",
                 [date, time, payrolls[0].id]
@@ -258,12 +259,12 @@ class StaffModel {
         const time = new Date().toTimeString().split(' ')[0];
         const placeholders = staffIds.map(() => '?').join(',');
 
-        // Find latest payrolls for these staff
+        // Find latest pending payrolls for these staff
         const [payrolls] = await pool.query(
-            `SELECT MAX(id) as pid FROM payroll WHERE staff_id IN (${placeholders}) GROUP BY staff_id`,
+            `SELECT MAX(id) as pid FROM payroll WHERE staff_id IN (${placeholders}) AND (payment_status != 'paid' OR payment_status IS NULL) GROUP BY staff_id`,
             staffIds
         );
-        const pids = payrolls.map(p => p.pid);
+        const pids = payrolls.map(p => p.pid).filter(id => id);
         if (pids.length === 0) return 0;
 
         const pidPlaceholders = pids.map(() => '?').join(',');
