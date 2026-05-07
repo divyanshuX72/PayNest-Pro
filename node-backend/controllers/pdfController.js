@@ -38,7 +38,7 @@ function buildPdfDoc(doc, staff, transactionId = 'N/A') {
     let y = 30;
     doc.circle(PAGE_W / 2, y + 20, 22).fillColor('#3b82f6').fill();
     doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(14).text('₹', (PAGE_W / 2) - 7, y + 12);
-    
+
     y += 55;
     doc.fillColor('#1e293b').font('Helvetica-Bold').fontSize(20).text('PayNest Pro', 40, y, { align: 'center', width: PAGE_W - 80 });
     y += 26;
@@ -89,7 +89,7 @@ function buildPdfDoc(doc, staff, transactionId = 'N/A') {
     doc.strokeColor('#e2e8f0').lineWidth(0.5).roundedRect(40, payStart, 515, 42, 4).stroke();
     infoRow(doc, 'Payment Date', new Date().toLocaleString('en-IN'), payStart + 8);
     infoRow(doc, 'Transaction ID', transactionId, payStart + 28);
-    
+
     doc.y = payStart + 50;
     doc.moveDown(0.5);
     rule(doc, '#e2e8f0');
@@ -98,159 +98,159 @@ function buildPdfDoc(doc, staff, transactionId = 'N/A') {
 
 
 
-        const attStart = doc.y - 4;
-        doc.rect(40, attStart, 515, 62).fillColor('#f8fafc').roundedRect(40, attStart, 515, 62, 4).fill();
-        doc.strokeColor('#e2e8f0').lineWidth(0.5).roundedRect(40, attStart, 515, 62, 4).stroke();
+    const attStart = doc.y - 4;
+    doc.rect(40, attStart, 515, 62).fillColor('#f8fafc').roundedRect(40, attStart, 515, 62, 4).fill();
+    doc.strokeColor('#e2e8f0').lineWidth(0.5).roundedRect(40, attStart, 515, 62, 4).stroke();
 
-        const totalLeaves = (staff.cl_taken || 0) + (staff.medical_taken || 0) + (staff.personal_leave || 0);
-        const presentDays = (staff.working_days || 30) - totalLeaves;
-        const at1 = attStart + 8;
-        const at2 = at1 + 20;
-        const at3 = at2 + 20;
+    const totalLeaves = (staff.cl_taken || 0) + (staff.medical_taken || 0) + (staff.personal_leave || 0);
+    const presentDays = (staff.working_days || 30) - totalLeaves;
+    const at1 = attStart + 8;
+    const at2 = at1 + 20;
+    const at3 = at2 + 20;
 
-        // Row 1
-        doc.font('Helvetica-Bold').fontSize(9).fillColor('#64748b').text('Working Days:', 55, at1, { continued: false });
-        doc.font('Helvetica').fillColor('#1e293b').text(String(staff.working_days || 30), 155, at1, { continued: false });
-        doc.font('Helvetica-Bold').fillColor('#64748b').text('Present:', 280, at1, { continued: false });
-        doc.font('Helvetica').fillColor('#22c55e').text(String(presentDays), 335, at1);
+    // Row 1
+    doc.font('Helvetica-Bold').fontSize(9).fillColor('#64748b').text('Working Days:', 55, at1, { continued: false });
+    doc.font('Helvetica').fillColor('#1e293b').text(String(staff.working_days || 30), 155, at1, { continued: false });
+    doc.font('Helvetica-Bold').fillColor('#64748b').text('Present:', 280, at1, { continued: false });
+    doc.font('Helvetica').fillColor('#22c55e').text(String(presentDays), 335, at1);
 
-        // Row 2 - paid leaves
-        doc.font('Helvetica-Bold').fontSize(9).fillColor('#64748b').text('CL Used:', 55, at2);
-        doc.font('Helvetica').fillColor('#1e293b').text(`${staff.cl_taken || 0} / ${staff.cl_quota || 8}`, 155, at2);
-        doc.font('Helvetica-Bold').fillColor('#64748b').text('Medical:', 280, at2);
-        doc.font('Helvetica').fillColor('#1e293b').text(`${staff.medical_taken || 0} / ${staff.medical_quota || 2}`, 335, at2);
+    // Row 2 - paid leaves
+    doc.font('Helvetica-Bold').fontSize(9).fillColor('#64748b').text('CL Used:', 55, at2);
+    doc.font('Helvetica').fillColor('#1e293b').text(`${staff.cl_taken || 0} / ${staff.cl_quota || 8}`, 155, at2);
+    doc.font('Helvetica-Bold').fillColor('#64748b').text('Medical:', 280, at2);
+    doc.font('Helvetica').fillColor('#1e293b').text(`${staff.medical_taken || 0} / ${staff.medical_quota || 2}`, 335, at2);
 
-        // Row 3 - unpaid
-        doc.font('Helvetica-Bold').fontSize(9).fillColor('#64748b').text('Personal Leave:', 55, at3);
-        doc.font('Helvetica').fillColor('#ef4444').text(String(staff.personal_leave || 0), 155, at3);
-        doc.font('Helvetica-Bold').fillColor('#64748b').text('Unpaid Leaves:', 280, at3);
-        doc.font('Helvetica').fillColor('#ef4444').text(String(staff.unpaid_leaves || 0), 380, at3);
+    // Row 3 - unpaid
+    doc.font('Helvetica-Bold').fontSize(9).fillColor('#64748b').text('Personal Leave:', 55, at3);
+    doc.font('Helvetica').fillColor('#ef4444').text(String(staff.personal_leave || 0), 155, at3);
+    doc.font('Helvetica-Bold').fillColor('#64748b').text('Unpaid Leaves:', 280, at3);
+    doc.font('Helvetica').fillColor('#ef4444').text(String(staff.unpaid_leaves || 0), 380, at3);
 
-        doc.y = attStart + 70;
-        doc.moveDown(0.5);
-        rule(doc, '#e2e8f0');
+    doc.y = attStart + 70;
+    doc.moveDown(0.5);
+    rule(doc, '#e2e8f0');
 
-        /* ── EARNINGS ────────────────────────────────────────────────────── */
-        sectionHeading(doc, 'EARNINGS');
+    /* ── EARNINGS ────────────────────────────────────────────────────── */
+    sectionHeading(doc, 'EARNINGS');
 
-        const earningItems = [
-            ['Basic Salary',  staff.basic     || 0],
-            ['HRA',           staff.hra       || 0],
-            ['DA',            staff.da        || 0],
-            ['Allowance',     staff.allowance || 0],
-        ];
+    const earningItems = [
+        ['Basic Salary', staff.basic || 0],
+        ['HRA', staff.hra || 0],
+        ['DA', staff.da || 0],
+        ['Allowance', staff.allowance || 0],
+    ];
 
-        // Table header
-        let ty = doc.y;
-        doc.rect(40, ty - 2, 515, 16).fillColor('#1e40af').fill();
-        doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(8.5)
-           .text('Component', 55, ty + 2, { width: 300 });
-        doc.fillColor('#ffffff').text('Amount', 0, ty + 2, { align: 'right', width: 510 });
-        ty += 18;
-        doc.y = ty;
+    // Table header
+    let ty = doc.y;
+    doc.rect(40, ty - 2, 515, 16).fillColor('#1e40af').fill();
+    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(8.5)
+        .text('Component', 55, ty + 2, { width: 300 });
+    doc.fillColor('#ffffff').text('Amount', 0, ty + 2, { align: 'right', width: 510 });
+    ty += 18;
+    doc.y = ty;
 
-        earningItems.forEach(([label, amount], i) => {
-            const rowY = ty + i * 18;
-            if (i % 2 === 0) {
-                doc.rect(40, rowY - 2, 515, 18).fillColor('#f8fafc').fill();
-            }
-            doc.font('Helvetica').fontSize(9).fillColor('#334155').text(label, 55, rowY, { width: 300 });
-            doc.font('Helvetica').fontSize(9).fillColor('#1e293b').text(inr(amount), 0, rowY, { align: 'right', width: 510 });
-        });
+    earningItems.forEach(([label, amount], i) => {
+        const rowY = ty + i * 18;
+        if (i % 2 === 0) {
+            doc.rect(40, rowY - 2, 515, 18).fillColor('#f8fafc').fill();
+        }
+        doc.font('Helvetica').fontSize(9).fillColor('#334155').text(label, 55, rowY, { width: 300 });
+        doc.font('Helvetica').fontSize(9).fillColor('#1e293b').text(inr(amount), 0, rowY, { align: 'right', width: 510 });
+    });
 
-        ty += earningItems.length * 18 + 6;
+    ty += earningItems.length * 18 + 6;
 
-        // Gross total row
-        doc.rect(40, ty - 2, 515, 20).fillColor('#dbeafe').fill();
-        doc.strokeColor('#93c5fd').lineWidth(0.5).rect(40, ty - 2, 515, 20).stroke();
-        doc.font('Helvetica-Bold').fontSize(10).fillColor('#1d4ed8')
-           .text('Gross Salary', 55, ty + 2, { width: 300 });
-        doc.font('Helvetica-Bold').fontSize(10).fillColor('#1d4ed8')
-           .text(inr(staff.gross || 0), 0, ty + 2, { align: 'right', width: 510 });
-        ty += 26;
+    // Gross total row
+    doc.rect(40, ty - 2, 515, 20).fillColor('#dbeafe').fill();
+    doc.strokeColor('#93c5fd').lineWidth(0.5).rect(40, ty - 2, 515, 20).stroke();
+    doc.font('Helvetica-Bold').fontSize(10).fillColor('#1d4ed8')
+        .text('Gross Salary', 55, ty + 2, { width: 300 });
+    doc.font('Helvetica-Bold').fontSize(10).fillColor('#1d4ed8')
+        .text(inr(staff.gross || 0), 0, ty + 2, { align: 'right', width: 510 });
+    ty += 26;
 
-        doc.y = ty;
-        doc.moveDown(0.5);
-        rule(doc, '#e2e8f0');
+    doc.y = ty;
+    doc.moveDown(0.5);
+    rule(doc, '#e2e8f0');
 
-        /* ── DEDUCTIONS ──────────────────────────────────────────────────── */
-        sectionHeading(doc, 'DEDUCTIONS');
+    /* ── DEDUCTIONS ──────────────────────────────────────────────────── */
+    sectionHeading(doc, 'DEDUCTIONS');
 
-        const deductItems = [
-            ['Provident Fund (PF)',  staff.pf         || 0],
-            ['Income Tax',          staff.tax        || 0],
-            ['Leave Deduction',     staff.deduction  || 0],
-        ];
+    const deductItems = [
+        ['Provident Fund (PF)', staff.pf || 0],
+        ['Income Tax', staff.tax || 0],
+        ['Leave Deduction', staff.deduction || 0],
+    ];
 
-        // Table header
-        let dy = doc.y;
-        doc.rect(40, dy - 2, 515, 16).fillColor('#7f1d1d').fill();
-        doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(8.5)
-           .text('Deduction Type', 55, dy + 2, { width: 300 });
-        doc.fillColor('#ffffff').text('Amount', 0, dy + 2, { align: 'right', width: 510 });
-        dy += 18;
-        doc.y = dy;
+    // Table header
+    let dy = doc.y;
+    doc.rect(40, dy - 2, 515, 16).fillColor('#7f1d1d').fill();
+    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(8.5)
+        .text('Deduction Type', 55, dy + 2, { width: 300 });
+    doc.fillColor('#ffffff').text('Amount', 0, dy + 2, { align: 'right', width: 510 });
+    dy += 18;
+    doc.y = dy;
 
-        const totalDed = deductItems.reduce((s, [, v]) => s + v, 0);
+    const totalDed = deductItems.reduce((s, [, v]) => s + v, 0);
 
-        deductItems.forEach(([label, amount], i) => {
-            const rowY = dy + i * 18;
-            if (i % 2 === 0) {
-                doc.rect(40, rowY - 2, 515, 18).fillColor('#fff5f5').fill();
-            }
-            doc.font('Helvetica').fontSize(9).fillColor('#334155').text(label, 55, rowY, { width: 300 });
-            doc.font('Helvetica').fontSize(9).fillColor('#dc2626')
-               .text('- ' + inr(amount), 0, rowY, { align: 'right', width: 510 });
-        });
+    deductItems.forEach(([label, amount], i) => {
+        const rowY = dy + i * 18;
+        if (i % 2 === 0) {
+            doc.rect(40, rowY - 2, 515, 18).fillColor('#fff5f5').fill();
+        }
+        doc.font('Helvetica').fontSize(9).fillColor('#334155').text(label, 55, rowY, { width: 300 });
+        doc.font('Helvetica').fontSize(9).fillColor('#dc2626')
+            .text('- ' + inr(amount), 0, rowY, { align: 'right', width: 510 });
+    });
 
-        dy += deductItems.length * 18 + 6;
+    dy += deductItems.length * 18 + 6;
 
-        // Total deductions row
-        doc.rect(40, dy - 2, 515, 20).fillColor('#fee2e2').fill();
-        doc.strokeColor('#fca5a5').lineWidth(0.5).rect(40, dy - 2, 515, 20).stroke();
-        doc.font('Helvetica-Bold').fontSize(10).fillColor('#dc2626')
-           .text('Total Deductions', 55, dy + 2, { width: 300 });
-        doc.font('Helvetica-Bold').fontSize(10).fillColor('#dc2626')
-           .text('- ' + inr(totalDed), 0, dy + 2, { align: 'right', width: 510 });
-        dy += 26;
-        doc.y = dy;
+    // Total deductions row
+    doc.rect(40, dy - 2, 515, 20).fillColor('#fee2e2').fill();
+    doc.strokeColor('#fca5a5').lineWidth(0.5).rect(40, dy - 2, 515, 20).stroke();
+    doc.font('Helvetica-Bold').fontSize(10).fillColor('#dc2626')
+        .text('Total Deductions', 55, dy + 2, { width: 300 });
+    doc.font('Helvetica-Bold').fontSize(10).fillColor('#dc2626')
+        .text('- ' + inr(totalDed), 0, dy + 2, { align: 'right', width: 510 });
+    dy += 26;
+    doc.y = dy;
 
-        doc.moveDown(0.6);
-        rule(doc, '#94a3b8');
+    doc.moveDown(0.6);
+    rule(doc, '#94a3b8');
 
-        /* ── FINAL SALARY (BIG) ──────────────────────────────────────────── */
-        const fs = staff.final_salary || 0;
-        const finalY = doc.y;
+    /* ── FINAL SALARY (BIG) ──────────────────────────────────────────── */
+    const fs = staff.final_salary || 0;
+    const finalY = doc.y;
 
-        // Green highlight box
-        doc.rect(40, finalY, 515, 54).fillColor('#f0fdf4').roundedRect(40, finalY, 515, 54, 6).fill();
-        doc.strokeColor('#22c55e').lineWidth(1).roundedRect(40, finalY, 515, 54, 6).stroke();
+    // Green highlight box
+    doc.rect(40, finalY, 515, 54).fillColor('#f0fdf4').roundedRect(40, finalY, 515, 54, 6).fill();
+    doc.strokeColor('#22c55e').lineWidth(1).roundedRect(40, finalY, 515, 54, 6).stroke();
 
-        doc.font('Helvetica-Bold').fontSize(11).fillColor('#15803d')
-           .text('NET SALARY (TAKE HOME)', 55, finalY + 10);
-        doc.font('Helvetica').fontSize(8).fillColor('#64748b')
-           .text('Gross Salary - Total Deductions', 55, finalY + 26);
+    doc.font('Helvetica-Bold').fontSize(11).fillColor('#15803d')
+        .text('NET SALARY (TAKE HOME)', 55, finalY + 10);
+    doc.font('Helvetica').fontSize(8).fillColor('#64748b')
+        .text('Gross Salary - Total Deductions', 55, finalY + 26);
 
-        // Big amount on the right
-        doc.font('Helvetica-Bold').fontSize(22).fillColor('#16a34a')
-           .text(inr(fs), 0, finalY + 14, { align: 'right', width: 510 });
+    // Big amount on the right
+    doc.font('Helvetica-Bold').fontSize(22).fillColor('#16a34a')
+        .text(inr(fs), 0, finalY + 14, { align: 'right', width: 510 });
 
-        doc.y = finalY + 62;
-        doc.moveDown(0.8);
+    doc.y = finalY + 62;
+    doc.moveDown(0.8);
 
-        /* ── IN WORDS ────────────────────────────────────────────────────── */
-        rule(doc, '#e2e8f0');
+    /* ── IN WORDS ────────────────────────────────────────────────────── */
+    rule(doc, '#e2e8f0');
 
-        const footY = PAGE_H - 50;
-        doc.rect(0, footY, PAGE_W, 50).fillColor('#f8fafc').fill();
-        doc.rect(0, footY, PAGE_W, 1).fillColor('#cbd5e1').fill();
+    const footY = PAGE_H - 50;
+    doc.rect(0, footY, PAGE_W, 50).fillColor('#f8fafc').fill();
+    doc.rect(0, footY, PAGE_W, 1).fillColor('#cbd5e1').fill();
 
-        doc.font('Helvetica').fontSize(8).fillColor('#94a3b8')
-           .text('This is a system-generated salary slip and does not require a signature.', 40, footY + 12, { align: 'center', width: PAGE_W - 80 });
-        doc.font('Helvetica').fontSize(7.5).fillColor('#cbd5e1')
-           .text(`Generated on ${new Date().toLocaleString('en-IN')}  ·  PayNest Pro`, 40, footY + 28, { align: 'center', width: PAGE_W - 80 });
+    doc.font('Helvetica').fontSize(8).fillColor('#94a3b8')
+        .text('This is a system-generated salary slip and does not require a signature.', 40, footY + 12, { align: 'center', width: PAGE_W - 80 });
+    doc.font('Helvetica').fontSize(7.5).fillColor('#cbd5e1')
+        .text(`Generated on ${new Date().toLocaleString('en-IN')}  ·  PayNest Pro`, 40, footY + 28, { align: 'center', width: PAGE_W - 80 });
 
-        doc.rect(0, PAGE_H - 6, PAGE_W, 6).fillColor('#3b82f6').fill();
+    doc.rect(0, PAGE_H - 6, PAGE_W, 6).fillColor('#3b82f6').fill();
 }
 
 exports.generateAndSaveSlip = async (staff, payroll_id) => {
@@ -280,7 +280,7 @@ exports.generateAndSaveSlip = async (staff, payroll_id) => {
                     await pool.query('UPDATE payroll SET transaction_id = ?, slip_generated = ? WHERE id = ?', [transaction_id, true, payroll_id]);
                     await pool.query('INSERT INTO salary_slips (staff_id, payroll_id, pdf_path) VALUES (?, ?, ?)', [staff.id, payroll_id, dbPath]);
                     resolve(dbPath);
-                } catch(e) { reject(e); }
+                } catch (e) { reject(e); }
             });
             stream.on('error', reject);
         } catch (e) { reject(e); }
@@ -291,11 +291,11 @@ exports.generateSlip = async (req, res, next) => {
     try {
         const staff_id = req.params.id;
         const [slips] = await pool.query('SELECT pdf_path FROM salary_slips WHERE staff_id = ? ORDER BY id DESC LIMIT 1', [staff_id]);
-        
+
         if (slips.length === 0) {
             return res.status(404).json({ error: 'Slip not available until payment is completed' });
         }
-        
+
         const pdfPath = path.join(__dirname, '..', 'public', slips[0].pdf_path);
         if (fs.existsSync(pdfPath)) {
             const safeName = path.basename(pdfPath);

@@ -175,3 +175,97 @@ exports.getDashboardStats = async (req, res, next) => {
         res.json(stats);
     } catch (error) { next(error); }
 };
+
+exports.exportStaffData = async (req, res, next) => {
+    try {
+        const staffList = await StaffModel.findAll();
+        let ExcelJS;
+        try {
+            ExcelJS = require('exceljs');
+        } catch (e) {
+            return res.status(500).json({ error: 'ExcelJS not installed. Run: npm install exceljs' });
+        }
+
+        const wb = new ExcelJS.Workbook();
+        wb.creator = 'PayNest Pro';
+        wb.created = new Date();
+
+        const ws = wb.addWorksheet('Staff Data', {
+            views: [{ state: 'frozen', ySplit: 1 }]
+        });
+
+        ws.columns = [
+            { key: 'employee_id',    header: 'ID',             width: 10 },
+            { key: 'name',           header: 'Name',           width: 22 },
+            { key: 'role',           header: 'Role',           width: 16 },
+            { key: 'department',     header: 'Department',     width: 16 },
+            { key: 'section',        header: 'Section',        width: 14 },
+            { key: 'month',          header: 'Month',          width: 10 },
+            { key: 'basic',          header: 'Basic',          width: 13 },
+            { key: 'hra',            header: 'HRA',            width: 11 },
+            { key: 'da',             header: 'DA',             width: 11 },
+            { key: 'allowance',      header: 'Allowance',      width: 13 },
+            { key: 'pf',             header: 'PF',             width: 11 },
+            { key: 'tax',            header: 'Tax',            width: 11 },
+            { key: 'gross',          header: 'Gross',          width: 13 },
+            { key: 'deduction',      header: 'Deduction',      width: 13 },
+            { key: 'final_salary',   header: 'FinalSalary',    width: 13 },
+            { key: 'working_days',   header: 'WorkingDays',    width: 14 },
+            { key: 'cl_taken',       header: 'CL_used',        width: 11 },
+            { key: 'medical_taken',  header: 'Medical_used',   width: 15 },
+            { key: 'personal_leave', header: 'Personal_leave', width: 16 }
+        ];
+
+        // ── Header row styling ──────────────────────────────────────
+        const headerRow = ws.getRow(1);
+        headerRow.height = 28;
+        headerRow.eachCell((cell) => {
+            cell.font      = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.border    = {
+                top:    { style: 'thin', color: { argb: 'FF1E3A8A' } },
+                left:   { style: 'thin', color: { argb: 'FF1E3A8A' } },
+                bottom: { style: 'thin', color: { argb: 'FF1E3A8A' } },
+                right:  { style: 'thin', color: { argb: 'FF1E3A8A' } },
+            };
+        });
+
+        const salaryCols = ['basic', 'hra', 'da', 'allowance', 'pf', 'tax', 'gross', 'deduction', 'final_salary'];
+        const leaveCols  = ['working_days', 'cl_taken', 'medical_taken', 'personal_leave'];
+
+        staffList.forEach((staff, idx) => {
+            const row       = ws.addRow(staff);
+            row.height      = 22;
+            const baseColor = idx % 2 === 0 ? 'FFFFFFFF' : 'FFF3F4F6';
+
+            row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                const colKey = ws.columns[colNumber - 1].key;
+                let bgColor  = baseColor;
+                if (salaryCols.includes(colKey)) bgColor = 'FFD1FAE5';
+                if (leaveCols.includes(colKey))  bgColor = 'FFFDE8D0';
+
+                cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
+                cell.font      = { name: 'Calibri', size: 11, bold: salaryCols.includes(colKey) };
+                cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                cell.border    = {
+                    top:    { style: 'thin', color: { argb: 'FFD1D5DB' } },
+                    left:   { style: 'thin', color: { argb: 'FFD1D5DB' } },
+                    bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+                    right:  { style: 'thin', color: { argb: 'FFD1D5DB' } },
+                };
+                if (salaryCols.includes(colKey)) {
+                    cell.numFmt = '₹#,##0';
+                    if (cell.value !== null && cell.value !== undefined && !isNaN(cell.value)) {
+                        cell.value = Number(cell.value);
+                    }
+                }
+            });
+        });
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="PayNest_Staff_Export_${new Date().toISOString().split('T')[0]}.xlsx"`);
+        await wb.xlsx.write(res);
+        res.end();
+    } catch (error) { next(error); }
+};
