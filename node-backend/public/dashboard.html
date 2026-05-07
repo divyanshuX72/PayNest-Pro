@@ -244,68 +244,95 @@
                         const indicatorSpan = document.getElementById('trendIndicator');
                         if (indicatorSpan) {
                             indicatorSpan.innerHTML = diff >= 0
-                                ? `<span style="color:var(--success)">↑ ${diff.toFixed(1)}%</span>`
-                                : `<span style="color:#ef4444">↓ ${Math.abs(diff).toFixed(1)}%</span>`;
+                                ? `<div style="display:flex;align-items:center;gap:6px;background:rgba(16,185,129,0.12);color:#10b981;padding:4px 12px;border-radius:20px;font-size:0.75rem;border:1px solid rgba(16,185,129,0.2);box-shadow:0 0 12px rgba(16,185,129,0.08)">
+                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                                     <span style="font-weight:600;letter-spacing:0.5px">${diff.toFixed(1)}%</span>
+                                   </div>`
+                                : `<div style="display:flex;align-items:center;gap:6px;background:rgba(244,63,94,0.12);color:#f43f5e;padding:4px 12px;border-radius:20px;font-size:0.75rem;border:1px solid rgba(244,63,94,0.2);box-shadow:0 0 12px rgba(244,63,94,0.08)">
+                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
+                                     <span style="font-weight:600;letter-spacing:0.5px">${Math.abs(diff).toFixed(1)}%</span>
+                                   </div>`;
                         }
                     }
                 }
 
                 const ctx = document.getElementById('salaryChart').getContext('2d');
 
-                // Create gradient
-                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-                gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)'); // Vibrant purple-blue fill
+                // Soft Modern Gradient
+                const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+                gradient.addColorStop(0, 'rgba(99, 102, 241, 0.45)'); 
+                gradient.addColorStop(0.5, 'rgba(99, 102, 241, 0.15)');
                 gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
 
-                new Chart(ctx, {
+                const glowPlugin = {
+                    id: 'glowPlugin',
+                    beforeDatasetsDraw: chart => {
+                        if (chart.canvas.id !== 'salaryChart') return;
+                        const ctx = chart.ctx;
+                        ctx.save();
+                        ctx.shadowColor = 'rgba(99, 102, 241, 0.5)';
+                        ctx.shadowBlur = 16;
+                        ctx.shadowOffsetX = 0;
+                        ctx.shadowOffsetY = 8;
+                    },
+                    afterDatasetsDraw: chart => {
+                        if (chart.canvas.id === 'salaryChart') {
+                            chart.ctx.restore();
+                        }
+                    }
+                };
+
+                if (window.salaryChartInstance) window.salaryChartInstance.destroy();
+                window.salaryChartInstance = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: trendLabels,
                         datasets: [{
                             label: 'Total Salary',
                             data: trendValues,
-                            borderColor: '#6366f1', // Vibrant line color
+                            borderColor: '#818cf8', // Lighter elegant indigo
                             backgroundColor: gradient,
                             borderWidth: 3,
-                            pointBackgroundColor: '#0f172a', // Hollow center matching background
-                            pointBorderColor: '#ffffff',
+                            pointBackgroundColor: '#0f172a',
+                            pointBorderColor: '#818cf8',
                             pointBorderWidth: 2,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
-                            pointHoverBackgroundColor: '#6366f1',
-                            pointHoverBorderColor: '#ffffff',
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointHoverBackgroundColor: '#ffffff',
+                            pointHoverBorderColor: '#818cf8',
                             pointHoverBorderWidth: 3,
                             fill: true,
-                            tension: 0.4 // Smooth lines
+                            tension: 0.45 // Even smoother curves
                         }]
                     },
+                    plugins: [glowPlugin],
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        layout: { padding: { top: 10, bottom: 10 } },
                         animation: {
-                            duration: 1500,
+                            duration: 2000,
                             easing: 'easeOutQuart'
                         },
                         interaction: {
                             mode: 'index',
                             intersect: false,
                         },
-                        plugins: {
-                            legend: { display: false },
+                        plugins: { 
+                            legend: { display: false }, 
                             tooltip: {
-                                backgroundColor: '#1e293b',
-                                titleColor: '#ffffff',
-                                titleFont: { family: 'Inter', size: 13, weight: '600' },
-                                bodyColor: '#cbd5e1',
-                                bodyFont: { family: 'Inter', size: 13 },
-                                borderColor: 'rgba(255,255,255,0.08)',
+                                backgroundColor: 'rgba(15, 23, 42, 0.85)',
+                                titleColor: '#f8fafc',
+                                titleFont: { family: 'Inter', size: 14, weight: '600' },
+                                bodyColor: '#e2e8f0',
+                                bodyFont: { family: 'Inter', size: 14, weight: '500' },
+                                borderColor: 'rgba(99, 102, 241, 0.2)',
                                 borderWidth: 1,
-                                padding: 12,
-                                displayColors: true,
-                                boxWidth: 10,
-                                boxHeight: 10,
-                                cornerRadius: 8,
-                                callbacks: {
+                                padding: 14,
+                                displayColors: false,
+                                cornerRadius: 10,
+                                caretSize: 6,
+                                callbacks: { 
                                     title: (ctx) => {
                                         const year = new Date().getFullYear();
                                         return ctx[0].label + ' ' + year;
@@ -315,21 +342,22 @@
                             }
                         },
                         scales: {
-                            x: {
-                                ticks: { color: '#94a3b8', font: { family: 'Inter', size: 12 }, padding: 10 },
+                            x: { 
+                                ticks: { color: '#64748b', font: { family: 'Inter', size: 12 }, padding: 12 }, 
                                 grid: { display: false },
                                 border: { display: false }
                             },
-                            y: {
+                            y: { 
                                 beginAtZero: true,
-                                ticks: {
-                                    color: '#94a3b8',
+                                ticks: { 
+                                    color: '#64748b', 
                                     font: { family: 'Inter', size: 12 },
-                                    padding: 10,
-                                    callback: v => '₹' + (v >= 10000000 ? (v / 10000000).toFixed(1) + 'Cr' : v >= 100000 ? (v / 100000).toFixed(1) + 'L' : v >= 1000 ? (v / 1000).toFixed(0) + 'K' : v)
-                                },
-                                grid: { color: 'rgba(148,163,184,0.06)' },
-                                border: { display: false }
+                                    padding: 15,
+                                    maxTicksLimit: 6,
+                                    callback: v => '₹' + (v >= 10000000 ? (v/10000000).toFixed(1)+'Cr' : v >= 100000 ? (v/100000).toFixed(1)+'L' : v >= 1000 ? (v/1000).toFixed(0)+'K' : v) 
+                                }, 
+                                grid: { color: 'rgba(148, 163, 184, 0.08)', drawBorder: false },
+                                border: { display: false, dash: [4, 4] }
                             }
                         }
                     }
