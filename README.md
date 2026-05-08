@@ -22,7 +22,9 @@ The platform supports real-time payroll tracking, monthly payroll cycles, and se
 # ✨ Features
 
 ✅ Staff Management
+
 ✅ Excel Import & Export
+
 ✅ Monthly Payroll Cycle
 ✅ Attendance-Based Salary Calculation
 ✅ CL & Medical Leave Quota System
