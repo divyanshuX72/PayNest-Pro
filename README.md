@@ -113,7 +113,7 @@ PayNest-Pro/
 1. Open phpMyAdmin  
 2. Create a new database  
 3. Import:
-   - `/home/runner/work/PayNest-Pro/PayNest-Pro/atiq-payroll-php/schema.sql`
+   - `atiq-payroll-php/schema.sql`
 4. Verify tables like:
    - `admins`
    - `admin_logs`
