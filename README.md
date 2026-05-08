@@ -22,9 +22,7 @@ The platform supports real-time payroll tracking, monthly payroll cycles, and se
 # ✨ Features
 
 ✅ Staff Management
-
 ✅ Excel Import & Export
-
 ✅ Monthly Payroll Cycle
 ✅ Attendance-Based Salary Calculation
 ✅ CL & Medical Leave Quota System
@@ -52,7 +50,8 @@ The platform supports real-time payroll tracking, monthly payroll cycles, and se
 
 ## Salary Slip
 
-> Add salary slip screenshot here
+> Add sal<img width="1536" height="1024" alt="a6e76d43-6882-4940-a0a7-175f4f60fae3" src="https://github.com/user-attachments/assets/f4862516-7311-4f76-bd53-849f98a7c87d" />
+ary slip screenshot here
 
 ## Import & Export
 
