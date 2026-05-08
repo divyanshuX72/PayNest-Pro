@@ -42,20 +42,23 @@ The platform supports real-time payroll tracking, monthly payroll cycles, and se
 
 ## Dashboard
 
-> Add dashboard screenshot here
+<img width="1895" height="892" alt="image" src="https://github.com/user-attachments/assets/39916cca-eebc-4ba5-9160-1e45da8f64b6" />
+
 
 ## Staff Management
 
-> Add staff management screenshot here
+<img width="1875" height="916" alt="image" src="https://github.com/user-attachments/assets/2d5f54fe-fafa-4919-9fdc-8952a39707fd" />
+
 
 ## Salary Slip
 
-> Add sal<img width="1536" height="1024" alt="a6e76d43-6882-4940-a0a7-175f4f60fae3" src="https://github.com/user-attachments/assets/f4862516-7311-4f76-bd53-849f98a7c87d" />
-ary slip screenshot here
+<img width="596" height="846" alt="image" src="https://github.com/user-attachments/assets/78008af4-4973-47c6-8e7d-520f6b8e6ee4" />
+
 
 ## Import & Export
 
-> Add import/export screenshot here
+<img width="1901" height="906" alt="image" src="https://github.com/user-attachments/assets/5effbca3-3a20-487c-bbc8-e99f099b255b" />
+
 
 ---
 
