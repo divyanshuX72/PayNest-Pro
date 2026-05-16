@@ -307,4 +307,4 @@ If you like this project:
 
 ---
 
-Made with ❤️ using PHP & MySQL
+Made with ❤️ using PHP & MySQL  
