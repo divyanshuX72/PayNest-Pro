@@ -8,9 +8,9 @@
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 A modern **College Payroll Management System** developed using **PHP & MySQL** that automates staff payroll processing, attendance-based salary calculation, Excel import/export, dashboard analytics, and PDF salary slip generation.
-
+ 
 ---
-
+   
 # 🚀 Overview
 
 **PayNest Pro** is a professional payroll automation platform designed for colleges and educational institutions. The system simplifies payroll operations by handling employee salary calculations, leave deductions, Excel-based payroll imports, and salary slip generation through a centralized admin dashboard.
