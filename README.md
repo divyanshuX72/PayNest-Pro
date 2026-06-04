@@ -89,7 +89,7 @@ PayNest-Pro/
 ## 1️⃣ Clone Repository
 
 ```bash
-git clone https://github.com/your-username/paynest-pro.git
+git clone https://github.com/divyanshuX72/paynest-pro.git
 ```
 
 ---
