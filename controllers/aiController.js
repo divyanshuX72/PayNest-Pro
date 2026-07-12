@@ -5,7 +5,7 @@ dotenv.config();
 
 // ─── GEMINI INITIALIZATION ────────────────────────────────────────────────────
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+const geminiModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const BLOCKED_SQL_PATTERN = /^\s*(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|CREATE|GRANT|REVOKE|RENAME|SHOW\s+DATABASES|LOAD|CALL|EXEC)\b/i;
@@ -226,90 +226,159 @@ Return ONLY a valid JSON object with intent, entities, and response_text. No mar
     }
 };
 
-// ─── REGEX FALLBACK (when Gemini is unavailable) ──────────────────────────────
-const fallbackClassify = (msg) => {
-    const lower = msg.toLowerCase().trim();
+// ─── CUSTOM NLP ENGINE (when Gemini is unavailable) ───────────────────────────
+const STOP_WORDS = new Set([
+    'please', 'can', 'you', 'find', 'show', 'give', 'display', 'tell', 'me', 'i', 'want', 'need', 'could',
+    'for', 'the', 'my', 'his', 'her', 'details', 'record', 'kindly', 'of', 'in', 'is', 'are', 'am', 'a', 'an',
+    'batao', 'dikhao', 'ki', 'ka', 'ko', 'hai', 'kya', 'mujhe', 'chahiye', 'karo', 'hain', 'ho', 'about', 'some', 'any'
+]);
 
-    if (/^(hi|hello|hey|greetings|good\s*(morning|afternoon|evening)|namaste|namaskar)/i.test(lower)) {
-        return { intent: 'greeting', entities: {}, response_text: 'Hello! 👋 I am your PayNest Pro AI Assistant. How can I help you today?' };
-    }
-    if (/^(help|what can you do|how to use|commands|kya kar sakte)/i.test(lower)) {
-        return { intent: 'help', entities: {}, response_text: 'Here\'s what I can help you with!' };
-    }
-    if (/\b(he|she|his|her|him|uski|uska|unki|unka)\b/i.test(lower)) {
-        let subIntent = 'employee_search';
-        if (/\b(leave|cl|medical|sick|chutti)\b/i.test(lower)) subIntent = 'leave_info';
-        else if (/\b(attendance|present|absent|haazri|hajri)\b/i.test(lower)) subIntent = 'attendance';
-        else if (/\b(salary|pay|gross|net|tankhwah|vetan)\b/i.test(lower)) subIntent = 'salary_info';
-        return { intent: 'followup', entities: { sub_intent: subIntent }, response_text: '' };
-    }
-    if (/\b(top|highest|max|maximum|sabse\s*(jyada|zyada))\s*(\d+)?\s*(deductions?|cuts?|katauti)/i.test(lower)) {
-        const m = lower.match(/(top|highest|max|maximum|sabse\s*(?:jyada|zyada))\s*(\d+)?/i);
-        return { intent: 'top_deductions', entities: { count: m && m[2] ? parseInt(m[2]) : 5 }, response_text: '' };
-    }
-    if (/\b(top|highest|max|maximum|sabse\s*(jyada|zyada))\s*(\d+)?\s*(salaries|salary|paid|tankhwah)/i.test(lower)) {
-        const m = lower.match(/(top|highest|max|maximum)\s*(\d+)?/i);
-        return { intent: 'salary_ranking', entities: { count: m && m[2] ? parseInt(m[2]) : 5, order: 'DESC' }, response_text: '' };
-    }
-    if (/\b(bottom|lowest|min|minimum|sabse\s*kam)\s*(\d+)?\s*(salaries|salary|paid|tankhwah)/i.test(lower)) {
-        const m = lower.match(/(bottom|lowest|min|minimum)\s*(\d+)?/i);
-        return { intent: 'salary_ranking', entities: { count: m && m[2] ? parseInt(m[2]) : 5, order: 'ASC' }, response_text: '' };
-    }
-    if (/\b(pending|unpaid|due|baki)\s*(payroll|salary|payment)/i.test(lower)) {
-        return { intent: 'payroll_pending', entities: {}, response_text: '' };
-    }
-    if (/\b(how many|count|total|number of|kitne)\s*(staff|employees|people|workers|log)/i.test(lower)) {
-        return { intent: 'staff_count', entities: {}, response_text: '' };
-    }
-    if (/\b(dashboard|summary|overview)\b/i.test(lower)) {
-        return { intent: 'dashboard_summary', entities: {}, response_text: '' };
-    }
-
-    // Try to extract a name
-    const name = extractNameFallback(msg, lower);
-    if (name) {
-        if (/\b(leave|cl|medical|sick|chutti)\b/i.test(lower)) return { intent: 'leave_info', entities: { name }, response_text: '' };
-        if (/\b(attendance|present|absent|working\s*days|haazri)\b/i.test(lower)) return { intent: 'attendance', entities: { name }, response_text: '' };
-        if (/\b(salary|pay|gross|net|tankhwah|vetan)\b/i.test(lower)) return { intent: 'salary_info', entities: { name }, response_text: '' };
-        return { intent: 'employee_search', entities: { name }, response_text: '' };
-    }
-
-    if (/^\d{2,6}$/.test(msg.trim())) {
-        return { intent: 'employee_search', entities: { employee_id: msg.trim() }, response_text: '' };
-    }
-
-    return { intent: 'unknown', entities: {}, response_text: "I'm not sure how to answer that. Try asking about employees, salaries, payroll, leaves, attendance, or departments. Type \"help\" to see what I can do!" };
+const INTENT_SYNONYMS = {
+    'greeting': ['hi', 'hello', 'hey', 'greetings', 'namaste', 'namaskar', 'morning', 'afternoon', 'evening'],
+    'help': ['help', 'commands', 'use', 'what'],
+    'salary_info': ['salary', 'pay', 'income', 'net', 'gross', 'tankhwah', 'vetan', 'payment', 'earning'],
+    'leave_info': ['leave', 'cl', 'medical', 'sick', 'chutti', 'holiday', 'leaves'],
+    'attendance': ['attendance', 'present', 'absent', 'working', 'days', 'haazri', 'hajri'],
+    'department_list': ['department', 'dept', 'departmental', 'branch'],
+    'payroll_pending': ['pending', 'unpaid', 'due', 'baki'],
+    'staff_count': ['how', 'many', 'count', 'total', 'number', 'kitne', 'staff', 'employees', 'people', 'workers', 'log', 'person', 'faculty', 'teacher', 'professor'],
+    'dashboard_summary': ['dashboard', 'summary', 'overview', 'overall'],
+    'salary_ranking_highest': ['highest', 'top', 'max', 'maximum', 'sabse', 'jyada', 'zyada', 'earner'],
+    'salary_ranking_lowest': ['lowest', 'bottom', 'min', 'minimum', 'kam'],
+    'top_deductions': ['deductions', 'cuts', 'katauti', 'deduction'],
+    'salary_slips': ['slip', 'payslip', 'slips', 'receipt'],
+    'payroll_month': ['month', 'monthly', 'mahina', 'report']
 };
 
-const extractNameFallback = (original, lower) => {
-    let m = original.match(/(?:of|for)\s+([a-zA-Z]+(?:\s+[a-zA-Z]+)?)/i);
-    if (m) {
-        const n = m[1].trim().toLowerCase();
-        if (!['all', 'every', 'department', 'payroll', 'staff'].includes(n)) return m[1].trim();
+const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december', 'jan', 'feb', 'mar', 'apr', 'aug', 'sept', 'oct', 'nov', 'dec'];
+
+const fallbackClassify = (msg) => {
+    // 1. Tokenization & Normalization
+    let cleanMsg = msg.replace(/[^\w\s-]/gi, '').toLowerCase();
+    let tokens = cleanMsg.split(/\s+/).filter(t => t.length > 0);
+
+    // 2. ID and Month Detection
+    let extractedId = null;
+    let extractedMonth = null;
+    
+    tokens = tokens.filter(t => {
+        if (/^(emp-)?\d{2,6}$/.test(t)) {
+            extractedId = t;
+            return false;
+        }
+        if (MONTHS.includes(t)) {
+            extractedMonth = t;
+            return false;
+        }
+        return true;
+    });
+
+    // 3. Stop-Word Removal
+    tokens = tokens.filter(t => !STOP_WORDS.has(t));
+
+    // 4. Intent & Synonym Matching (Fuzzy)
+    const intentScores = {};
+    const matchedTokens = new Set();
+    
+    for (const [intent, synonyms] of Object.entries(INTENT_SYNONYMS)) {
+        intentScores[intent] = 0;
+        for (let i = 0; i < tokens.length; i++) {
+            const token = tokens[i];
+            let bestScore = 999;
+            for (const syn of synonyms) {
+                const dist = levenshteinDistance(token, syn);
+                if (dist < bestScore) bestScore = dist;
+            }
+            const threshold = Math.max(1, Math.floor(token.length * 0.3));
+            if (bestScore <= threshold) {
+                intentScores[intent] += (1 - bestScore/token.length);
+                matchedTokens.add(token);
+            }
+        }
     }
-    m = original.match(/(?:show|search|find|get|display|view|details?)\s+(?:employee\s+|staff\s+)?([a-zA-Z]+(?:\s+[a-zA-Z]+)?)/i);
-    if (m) {
-        const name = m[1].trim();
-        const skip = ['department', 'payroll', 'salary', 'all', 'staff', 'employee', 'total', 'monthly', 'summary', 'status', 'leave', 'attendance', 'analytics', 'report', 'recent', 'pending', 'paid', 'slips', 'dashboard'];
-        if (!skip.includes(name.toLowerCase())) return name;
+
+    // Determine highest scoring intent
+    let bestIntent = 'unknown';
+    let maxScore = 0;
+    for (const [intent, score] of Object.entries(intentScores)) {
+        if (score > maxScore) {
+            maxScore = score;
+            bestIntent = intent;
+        }
     }
-    m = original.match(/([a-zA-Z]+(?:\s+[a-zA-Z]+)?)\s+(?:details?|salary|info|information|leave|attendance|payroll)/i);
-    if (m) {
-        const n = m[1].trim().toLowerCase();
-        const skip = ['show', 'get', 'find', 'my', 'his', 'her', 'their', 'the', 'all', 'any', 'pending', 'paid', 'total', 'monthly', 'dashboard'];
-        if (!skip.includes(n)) return m[1].trim();
+
+    // Map composite intent args
+    const originalIntent = bestIntent;
+    
+    // Resolve Composite Intents
+    if (bestIntent === 'salary_ranking_highest' && intentScores['top_deductions'] > 0) {
+        bestIntent = 'top_deductions';
+    } else if (bestIntent === 'salary_ranking_highest') {
+        bestIntent = 'salary_ranking';
+    } else if (bestIntent === 'salary_ranking_lowest') {
+        bestIntent = 'salary_ranking';
     }
-    if (/^[a-zA-Z]+$/.test(original.trim())) {
-        const word = original.trim();
-        const skip = ['hi', 'hello', 'help', 'staff', 'payroll', 'salary', 'department', 'dashboard', 'summary', 'leave', 'attendance', 'namaste', 'hey', 'pending', 'paid'];
-        if (!skip.includes(word.toLowerCase())) return word;
+    
+    if (extractedMonth && bestIntent === 'unknown') {
+        bestIntent = 'payroll_month';
     }
-    return null;
+
+    // 5. Context & Entity Extraction
+    const remainingTokens = tokens.filter(t => !matchedTokens.has(t));
+    const extractedName = remainingTokens.length > 0 ? remainingTokens.join(' ') : null;
+
+    let finalIntent = bestIntent;
+    const entities = {};
+
+    if (extractedId) {
+        entities.employee_id = extractedId;
+        if (finalIntent === 'unknown') finalIntent = 'employee_search';
+    } else if (extractedMonth) {
+        entities.month = extractedMonth;
+    } else if (extractedName) {
+        if (finalIntent === 'department_list') {
+            entities.department = extractedName;
+        } else if (finalIntent === 'role_search') {
+            entities.role = extractedName;
+        } else {
+            entities.name = extractedName;
+            if (finalIntent === 'unknown') finalIntent = 'employee_search';
+        }
+    } else if (finalIntent === 'unknown') {
+        if (/\b(he|she|his|her|him|uski|uska|unki|unka)\b/i.test(msg)) {
+            finalIntent = 'followup';
+            entities.sub_intent = 'employee_search';
+        } else {
+             return { intent: 'unknown', entities: {}, response_text: "I'm not sure how to answer that. Try asking about employees, salaries, payroll, leaves, attendance, or departments." };
+        }
+    }
+
+    // Handle Context Follow-ups (name/id missing but intent known)
+    if (['salary_info', 'leave_info', 'attendance'].includes(finalIntent) && !extractedName && !extractedId) {
+        entities.sub_intent = finalIntent;
+        finalIntent = 'followup';
+    }
+    
+    // Map composite intent args
+    if (finalIntent === 'salary_ranking') {
+        entities.count = 5;
+        entities.order = originalIntent === 'salary_ranking_highest' ? 'DESC' : 'ASC';
+    } else if (finalIntent === 'top_deductions') {
+        entities.count = 5;
+    }
+
+    return { intent: finalIntent, entities, response_text: '' };
 };
 
 // ─── FUZZY NAME MATCHING ──────────────────────────────────────────────────────
 const findEmployees = async (search, limit = 10) => {
-    if (/^\d+$/.test(search)) {
+    if (!search) return [];
+    
+    // Remove common prefixes/articles from the search string
+    let cleanSearch = search.trim();
+    cleanSearch = cleanSearch.replace(/^(the|mr\.?|mrs\.?|ms\.?|dr\.?)\s+/i, '').trim();
+
+    if (/^\d+$/.test(cleanSearch)) {
         return await safeQuery(
             `SELECT s.*, p.gross_salary, p.final_salary, p.deduction, p.payment_status, p.paid_date,
                     p.payroll_month, p.payroll_year, p.basic, p.hra, p.da, p.allowance, p.pf, p.tax,
@@ -317,7 +386,7 @@ const findEmployees = async (search, limit = 10) => {
              FROM staff s
              LEFT JOIN payroll p ON p.staff_id = s.id
              WHERE s.employee_id = ? OR s.id = ?
-             ORDER BY p.created_at DESC LIMIT ?`, [search, search, limit]
+             ORDER BY p.created_at DESC LIMIT ?`, [cleanSearch, cleanSearch, limit]
         );
     }
 
@@ -334,7 +403,7 @@ const findEmployees = async (search, limit = 10) => {
                  WHEN LOWER(s.name) LIKE ? THEN 1
                  ELSE 2 END,
             p.created_at DESC
-         LIMIT ?`, [`${search}%`, `%${search}%`, search, `${search}%`, limit]
+         LIMIT ?`, [`${cleanSearch}%`, `%${cleanSearch}%`, cleanSearch, `${cleanSearch}%`, limit]
     );
 
     // If no results, try SOUNDEX matching (phonetic/fuzzy)
@@ -347,7 +416,7 @@ const findEmployees = async (search, limit = 10) => {
              LEFT JOIN payroll p ON p.staff_id = s.id
              WHERE SOUNDEX(s.name) = SOUNDEX(?)
              ORDER BY p.created_at DESC
-             LIMIT ?`, [search, limit]
+             LIMIT ?`, [cleanSearch, limit]
         );
     }
 
