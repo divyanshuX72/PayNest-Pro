@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Detail - PayNest Pro</title>
+    <meta name="description" content="View detailed staff profile, salary breakdown, leave records and payroll status.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ── Profile Header ── */
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1.75rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), #8b5cf6);
+        }
+
+        .profile-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            flex-shrink: 0;
+        }
+
+        .profile-info h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-bright);
+            margin-bottom: .25rem;
+        }
+
+        .profile-meta {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+
+        .profile-meta span {
+            font-size: .82rem;
+            color: var(--text-muted);
+        }
+
+        .profile-meta .badge {
+            font-size: .73rem;
+        }
+
+        .profile-status {
+            margin-left: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: .5rem;
+        }
+
+        .status-active {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            padding: .22rem .7rem;
+            background: rgba(16, 185, 129, .12);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, .2);
+            border-radius: 20px;
+            font-size: .73rem;
+            font-weight: 600;
+        }
+
+        .status-inactive {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            padding: .22rem .7rem;
+            background: rgba(239, 68, 68, .12);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, .2);
+            border-radius: 20px;
+            font-size: .73rem;
+            font-weight: 600;
+        }
+
+        /* ── Detail Cards Grid ── */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            transition: all .3s ease;
+        }
+
+        .detail-card:hover {
+            border-color: var(--border-glow);
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.06);
+        }
+
+        .detail-card-title {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            font-size: .78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 1.15rem;
+            padding-bottom: .75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .detail-card-title .icon {
+            font-size: 1rem;
+        }
+
+        /* ── Info Row ── */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: .55rem 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-size: .83rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-size: .85rem;
+            color: var(--text-bright);
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .info-value.green {
+            color: var(--success);
+        }
+
+        .info-value.red {
+            color: var(--danger);
+        }
+
+        .info-value.blue {
+            color: var(--primary);
+        }
+
+        .info-value.yellow {
+            color: var(--warning);
+        }
+
+        /* ── Salary highlight ── */
+        .salary-total {
+            margin-top: .75rem;
+            padding: .85rem 1rem;
+            background: rgba(59, 130, 246, 0.06);
+            border: 1px solid rgba(59, 130, 246, 0.12);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .salary-total .label {
+            font-size: .85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .salary-total .amount {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        /* ── Leave Bar ── */
+        .leave-bar-wrap {
+            margin-top: .25rem;
+        }
+
+        .leave-bar-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(148, 163, 184, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: .4rem;
+        }
+
+        .leave-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width .5s ease;
+        }
+
+        .leave-bar-fill.safe {
+            background: var(--success);
+        }
+
+        .leave-bar-fill.warn {
+            background: var(--warning);
+        }
+
+        .leave-bar-fill.over {
+            background: var(--danger);
+        }
+
+        /* ── Back & Action buttons ── */
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .5rem 1rem;
+            background: rgba(100, 116, 139, 0.15);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: .85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all .2s;
+            text-decoration: none;
+        }
+
+        .btn-back:hover {
+            background: rgba(100, 116, 139, 0.25);
+        }
+
+        .btn-edit {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            padding: .5rem 1rem;
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            color: var(--primary);
+            font-size: .85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .btn-edit:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        /* ── Loading skeleton ── */
+        .detail-skeleton {
+            animation: pulse 1.5s infinite;
+            text-align: center;
+            padding: 4rem 1rem;
+            color: var(--text-muted);
+        }
+
+        .detail-skeleton .sk-icon {
+            font-size: 2.5rem;
+            opacity: .3;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        /* ── Payroll card full-width ── */
+        .detail-grid-full {
+            grid-column: 1 / -1;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .profile-status {
+                margin-left: 0;
+                align-items: center;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-meta {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">💰</div>
+            <h2>PayNest Pro</h2>
+        </div>
+        <nav>
+            <a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="staff.html" class="active"><span class="nav-icon">👥</span> Staff Management</a>
+            <a href="upload.html"><span class="nav-icon">🔄</span> Import & Export</a>
+            <a href="payroll.html"><span class="nav-icon">💸</span> Payroll Management</a>
+            <a href="salary.html"><span class="nav-icon">💵</span> Salary Slips</a>
+            <a href="ai_assistant.html"><span class="nav-icon">🤖</span> AI Assistant</a>
+        </nav>
+        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div style="display:flex;align-items:center;gap:1rem">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                <h1>Staff Profile</h1>
+            </div>
+        </header>
+
+        <div class="page-container">
+
+            <!-- Top Actions -->
+            <div class="top-actions">
+                <a href="staff.html" class="btn-back">← Back to Staff</a>
+                <button class="btn-edit" id="editBtn" onclick="goEdit()" style="display:none">✏️ Edit</button>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="detail-skeleton">
+                <span class="sk-icon">👤</span>
+                <p>Loading staff details...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" style="display:none;text-align:center;padding:4rem 1rem">
+                <span style="font-size:2.5rem;opacity:.3;display:block;margin-bottom:1rem">⚠️</span>
+                <p style="color:var(--text-muted);font-size:.95rem" id="errorMsg">Staff not found.</p>
+                <a href="staff.html" class="btn" style="margin-top:1rem;display:inline-flex">← Go Back</a>
+            </div>
+
+            <!-- Main Content (hidden until loaded) -->
+            <div id="detailContent" style="display:none">
+
+                <!-- Profile Header -->
+                <div class="profile-header" id="profileHeader">
+                    <div class="profile-avatar" id="avatarEl">AS</div>
+                    <div class="profile-info">
+                        <h2 id="staffName">—</h2>
+                        <div class="profile-meta">
+                            <span id="staffRole">—</span>
+                            <span id="staffDept"></span>
+                            <span id="staffEmpId" style="color:var(--text-muted);font-size:.78rem"></span>
+                        </div>
+                    </div>
+                    <div class="profile-status">
+                        <span id="staffStatus" class="status-active">● Active</span>
+                        <span id="staffMonth" style="font-size:.78rem;color:var(--text-muted)"></span>
+                    </div>
+                </div>
+
+                <!-- Info Cards Grid -->
+                <div class="detail-grid">
+
+                    <!-- Personal Info -->
+                    <div class="detail-card">
+                        <div class="detail-card-title"><span class="icon">👤</span> Personal Info</div>
+                        <div class="info-row"><span class="info-label">Full Name</span><span class="info-value"
+                                id="dName">—</span></div>
+                        <div class="info-row"><span class="info-label">Employee ID</span><span class="info-value"
+                                id="dEmpId">—</span></div>
+                        <div class="info-row"><span class="info-label">Role</span><span class="info-value"
+                                id="dRole">—</span></div>
+                        <div class="info-row"><span class="info-label">Department</span><span class="info-value"
+                                id="dDept">—</span></div>
+                        <div class="info-row"><span class="info-label">Section</span><span class="info-value"
+                                id="dSection">—</span></div>
+                        <div class="info-row"><span class="info-label">Section</span><span class="info-value"
+                                id="dQual">—</span></div>
+                        <div class="info-row"><span class="info-label">Joining Date</span><span class="info-value"
+                                id="dJoining">—</span></div>
+                        <div class="info-row"><span class="info-label">Status</span><span class="info-value"
+                                id="dStatus">—</span></div>
+                    </div>
+
+                    <!-- Salary Breakdown -->
+                    <div class="detail-card">
+                        <div class="detail-card-title"><span class="icon">💰</span> Salary Breakdown</div>
+                        <div class="info-row"><span class="info-label">Basic</span><span class="info-value"
+                                id="dBasic">₹0</span></div>
+                        <div class="info-row"><span class="info-label">HRA</span><span class="info-value"
+                                id="dHra">₹0</span></div>
+                        <div class="info-row"><span class="info-label">DA</span><span class="info-value"
+                                id="dDa">₹0</span></div>
+                        <div class="info-row"><span class="info-label">Allowance</span><span class="info-value"
+                                id="dAllow">₹0</span></div>
+                        <div class="info-row"><span class="info-label">PF</span><span class="info-value red"
+                                id="dPf">-₹0</span></div>
+                        <div class="info-row"><span class="info-label">Tax</span><span class="info-value red"
+                                id="dTax">-₹0</span></div>
+                        <div class="salary-total">
+                            <span class="label">Gross Salary</span>
+                            <span class="amount" id="dGross">₹0</span>
+                        </div>
+                    </div>
+
+                    <!-- Leave Details -->
+                    <div class="detail-card">
+                        <div class="detail-card-title"><span class="icon">📋</span> Leave Details</div>
+                        <div class="info-row">
+                            <span class="info-label">Casual Leave (CL)</span>
+                            <span class="info-value" id="dCl">0 / 8</span>
+                        </div>
+                        <div class="leave-bar-wrap">
+                            <div class="leave-bar-track">
+                                <div class="leave-bar-fill safe" id="clBar" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <div class="info-row" style="margin-top:.5rem">
+                            <span class="info-label">Medical Leave</span>
+                            <span class="info-value" id="dMed">0 / 2</span>
+                        </div>
+                        <div class="leave-bar-wrap">
+                            <div class="leave-bar-track">
+                                <div class="leave-bar-fill safe" id="medBar" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <div class="info-row" style="margin-top:.5rem">
+                            <span class="info-label">Personal Leave (Unpaid)</span>
+                            <span class="info-value red" id="dPl">0</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Working Days</span>
+                            <span class="info-value" id="dWorkDays">30</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Unpaid Leaves</span>
+                            <span class="info-value red" id="dUnpaid">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Payroll Status -->
+                    <div class="detail-card">
+                        <div class="detail-card-title"><span class="icon">💸</span> Payroll Info</div>
+                        <div class="info-row"><span class="info-label">Deduction</span><span class="info-value red"
+                                id="dDeduction">₹0</span></div>
+                        <div class="info-row"><span class="info-label">Net Salary</span><span class="info-value"
+                                id="dNet">₹0</span></div>
+                        <div class="info-row">
+                            <span class="info-label">Payment Status</span>
+                            <span id="dPayStatus"></span>
+                        </div>
+                        <div class="info-row"><span class="info-label">Paid Date</span><span class="info-value"
+                                id="dPaidDate">—</span></div>
+                        <div class="info-row"><span class="info-label">Paid Time</span><span class="info-value"
+                                id="dPaidTime">—</span></div>
+                        <div class="salary-total"
+                            style="background:rgba(16,185,129,0.06);border-color:rgba(16,185,129,0.12)">
+                            <span class="label">Final Salary</span>
+                            <span class="amount" id="dFinal">₹0</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        /* ── Auth ── */
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        /* ── Helpers ── */
+        function logout() { localStorage.removeItem('token'); window.location.href = '/login.html'; }
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+        }
+        function showToast(msg, type = 'info') {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = 'toast toast-' + type;
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 3500);
+        }
+
+        const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        function fmtDate(dateStr) {
+            if (!dateStr) return null;
+            const d = new Date(dateStr);
+            return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+        }
+
+        function fmtTime(timeStr) {
+            if (!timeStr) return null;
+            const parts = timeStr.split(':');
+            let h = parseInt(parts[0]);
+            const m = parts[1];
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            return `${h}:${m} ${ampm}`;
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+        }
+
+        function cur(val) {
+            return '₹' + (val || 0).toLocaleString();
+        }
+
+        /* ── Get Staff ID from URL ── */
+        const params = new URLSearchParams(window.location.search);
+        const staffId = params.get('id');
+        let staffData = null;
+
+        if (!staffId) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+            document.getElementById('errorMsg').textContent = 'No staff ID provided.';
+        } else {
+            loadStaffDetail();
+        }
+
+        async function loadStaffDetail() {
+            try {
+                const res = await fetch('/api/staff/' + staffId, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (!res.ok) {
+                    throw new Error('Staff not found');
+                }
+
+                staffData = await res.json();
+                renderDetail(staffData);
+
+            } catch (err) {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').style.display = 'block';
+                document.getElementById('errorMsg').textContent = err.message || 'Failed to load staff details.';
+            }
+        }
+
+        function renderDetail(s) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('detailContent').style.display = 'block';
+            document.getElementById('editBtn').style.display = 'inline-flex';
+
+            // Profile Header
+            document.getElementById('avatarEl').textContent = getInitials(s.name);
+            document.getElementById('staffName').textContent = s.name;
+            document.getElementById('staffRole').textContent = s.role || 'No role';
+            document.getElementById('staffDept').innerHTML = `<span class="badge">${s.department}</span>`;
+            document.getElementById('staffEmpId').textContent = s.employee_id || '#' + s.id;
+
+            const statusEl = document.getElementById('staffStatus');
+            if (s.status === 'Inactive') {
+                statusEl.className = 'status-inactive';
+                statusEl.textContent = '● Inactive';
+            } else {
+                statusEl.className = 'status-active';
+                statusEl.textContent = '● Active';
+            }
+            document.getElementById('staffMonth').textContent = s.month ? `Month: ${s.month}` : '';
+
+            // Personal Info
+            document.getElementById('dName').textContent = s.name;
+            document.getElementById('dEmpId').textContent = s.employee_id || '#' + s.id;
+            document.getElementById('dRole').textContent = s.role || '—';
+            document.getElementById('dDept').textContent = s.department || '—';
+            document.getElementById('dSection').textContent = s.section || '—';
+            document.getElementById('dQual').textContent = s.qualification || '—';
+            document.getElementById('dJoining').textContent = s.joining_date ? fmtDate(s.joining_date) : '—';
+            document.getElementById('dStatus').textContent = s.status || 'Active';
+
+            // Salary
+            document.getElementById('dBasic').textContent = cur(s.basic);
+            document.getElementById('dHra').textContent = cur(s.hra);
+            document.getElementById('dDa').textContent = cur(s.da);
+            document.getElementById('dAllow').textContent = cur(s.allowance);
+            document.getElementById('dPf').textContent = '-' + cur(s.pf);
+            document.getElementById('dTax').textContent = '-' + cur(s.tax);
+            document.getElementById('dGross').textContent = cur(s.gross);
+
+            // Leaves
+            const clUsed = s.cl_used || s.cl_taken || 0;
+            const clQuota = s.cl_quota || 8;
+            const medUsed = s.medical_used || s.medical_taken || 0;
+            const medQuota = s.medical_quota || 2;
+
+            document.getElementById('dCl').textContent = `${clUsed} / ${clQuota}`;
+            document.getElementById('dMed').textContent = `${medUsed} / ${medQuota}`;
+            document.getElementById('dPl').textContent = s.personal_leave || 0;
+            document.getElementById('dWorkDays').textContent = s.working_days || 30;
+            document.getElementById('dUnpaid').textContent = s.unpaid_leaves || 0;
+
+            // Leave bars
+            setLeaveBar('clBar', clUsed, clQuota);
+            setLeaveBar('medBar', medUsed, medQuota);
+
+            // Payroll
+            const ded = s.deduction || 0;
+            document.getElementById('dDeduction').textContent = ded > 0 ? '-' + cur(ded) : '₹0';
+            document.getElementById('dNet').textContent = cur(s.net);
+
+            const isPaid = s.payment_status === 'paid';
+            document.getElementById('dPayStatus').innerHTML = isPaid
+                ? '<span style="display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .65rem;background:rgba(16,185,129,.13);color:var(--success);border:1px solid rgba(16,185,129,.2);border-radius:20px;font-size:.73rem;font-weight:600">✅ Paid</span>'
+                : '<span style="display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .65rem;background:rgba(239,68,68,.12);color:var(--danger);border:1px solid rgba(239,68,68,.2);border-radius:20px;font-size:.73rem;font-weight:600">⏳ Pending</span>';
+
+            document.getElementById('dPaidDate').textContent = s.paid_date ? fmtDate(s.paid_date) : '—';
+            document.getElementById('dPaidTime').textContent = s.paid_time ? fmtTime(s.paid_time) : '—';
+            document.getElementById('dFinal').textContent = cur(s.final_salary);
+
+            // Update page title
+            document.title = `${s.name} - Staff Detail - PayNest Pro`;
+        }
+
+        function setLeaveBar(barId, used, quota) {
+            const bar = document.getElementById(barId);
+            const pct = quota > 0 ? Math.min((used / quota) * 100, 100) : 0;
+            bar.style.width = pct + '%';
+            bar.className = 'leave-bar-fill';
+            if (used > quota) bar.classList.add('over');
+            else if (used >= quota) bar.classList.add('warn');
+            else bar.classList.add('safe');
+        }
+
+        function goEdit() {
+            if (!staffData) return;
+            // Navigate to staff page — the edit modal will be triggered via URL param
+            window.location.href = 'staff.html?edit=' + staffData.id;
+        }
+    </script>
+</body>
+
+</html>

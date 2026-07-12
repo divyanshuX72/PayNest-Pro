@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payroll Management - PayNest Pro</title>
+    <meta name="description"
+        content="Manage payroll payments, track salary status, and record payment dates for all staff members.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ── Page-specific only ── */
+        .payroll-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .pstat {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: .75rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: .2rem;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .pstat-label {
+            font-size: .65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pstat-value {
+            font-size: clamp(.85rem, 1.2vw, 1.25rem);
+            font-weight: 700;
+            color: var(--text-bright);
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pstat-value.green { color: var(--success); }
+        .pstat-value.red { color: var(--danger); }
+        .pstat-value.blue { color: var(--primary); }
+        .pstat-value.yellow { color: var(--warning); }
+
+        /* ── Toolbar ── */
+        .payroll-toolbar {
+            display: flex;
+            gap: .75rem;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 1.2rem;
+        }
+
+        .payroll-toolbar .search-bar {
+            flex: 0 1 35%;
+            min-width: 180px;
+            max-width: 400px;
+        }
+
+        .payroll-toolbar .filter-select-wrap {
+            flex: 0 1 20%;
+            min-width: 120px;
+        }
+
+        /* ── Select wrapper ── */
+        .filter-select-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .filter-select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: var(--glass-bg);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1rem;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: .55rem 2.2rem .55rem .85rem;
+            border-radius: 8px;
+            font-size: .82rem;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+            transition: border-color .2s;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .filter-select:focus { border-color: var(--primary); }
+        .filter-select option { background: #0d1229; }
+
+        /* ── Table ── */
+        .payroll-table th {
+            font-size: .72rem;
+            white-space: nowrap;
+        }
+
+        .payroll-table td {
+            font-size: .82rem;
+            vertical-align: middle;
+        }
+
+        .emp-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .emp-cell .en {
+            font-weight: 600;
+            color: var(--text-bright);
+        }
+
+        .emp-cell .eid {
+            font-size: .68rem;
+            color: var(--text-muted);
+        }
+
+        /* ── Payroll status badges ── */
+        .badge-paid {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            padding: .22rem .65rem;
+            background: rgba(16, 185, 129, .13);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, .2);
+            border-radius: 20px;
+            font-size: .72rem;
+            font-weight: 600;
+        }
+
+        .badge-pay-pending {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            padding: .22rem .65rem;
+            background: rgba(239, 68, 68, .12);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, .2);
+            border-radius: 20px;
+            font-size: .72rem;
+            font-weight: 600;
+        }
+
+        /* ── Paid-on cell ── */
+        .paidon {
+            font-size: .77rem;
+            color: var(--text-main);
+            white-space: nowrap;
+        }
+
+        /* ── Action buttons ── */
+        .btn-act-pay {
+            padding: .35rem .85rem;
+            font-size: .77rem;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 180ms ease;
+            white-space: nowrap;
+            height: 34px;
+            min-width: 110px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: inherit;
+        }
+
+        .btn-act-pay:hover {
+            background: rgba(59, 130, 246, .12);
+            transform: translateY(-1px);
+        }
+
+        .btn-act-done {
+            padding: .35rem .85rem;
+            font-size: .77rem;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, .3);
+            cursor: default;
+            font-weight: 600;
+            opacity: .55;
+            height: 34px;
+            min-width: 110px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: inherit;
+        }
+
+        /* ── Checkbox column ── */
+        .payroll-table input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* ── Confirm dialog override for pay ── */
+        .pay-confirm-icon {
+            font-size: 2.2rem;
+            margin-bottom: .75rem;
+            display: block;
+        }
+
+        /* ── Empty / skeleton ── */
+        .pg-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+
+        .pg-empty span {
+            font-size: 2.5rem;
+            opacity: .4;
+            display: block;
+            margin-bottom: .75rem;
+        }
+
+        .pg-empty p { font-size: .9rem; }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">💰</div>
+            <h2>PayNest Pro</h2>
+        </div>
+        <nav>
+            <a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="staff.html"><span class="nav-icon">👥</span> Staff Management</a>
+            <a href="upload.html"><span class="nav-icon">🔄</span> Import & Export</a>
+            <a href="payroll.html" class="active"><span class="nav-icon">💸</span> Payroll Management</a>
+            <a href="salary.html"><span class="nav-icon">💵</span> Salary Slips</a>
+            <a href="ai_assistant.html"><span class="nav-icon">🤖</span> AI Assistant</a>
+        </nav>
+        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div style="display:flex;align-items:center;gap:1rem">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                <div>
+                    <h1>💸 Payroll Management</h1>
+                    <p style="color:var(--text-muted);font-size:.72rem;margin-top:2px">Track &amp; process staff salary
+                        payments</p>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <span id="cycleLabel" style="color:var(--text-muted);font-size:.8rem"></span>
+            </div>
+        </header>
+
+        <div class="page-container">
+
+            <!-- STAT CARDS -->
+            <div class="payroll-stats" id="payrollStats">
+                <div class="pstat">
+                    <div class="pstat-label">Total Staff</div>
+                    <div class="pstat-value blue" id="ps-total">—</div>
+                </div>
+                <div class="pstat">
+                    <div class="pstat-label">Total Payable</div>
+                    <div class="pstat-value yellow" id="ps-payable">—</div>
+                </div>
+                <div class="pstat">
+                    <div class="pstat-label">✅ Paid</div>
+                    <div class="pstat-value green" id="ps-paid">—</div>
+                </div>
+                <div class="pstat">
+                    <div class="pstat-label">⏳ Pending</div>
+                    <div class="pstat-value red" id="ps-pending">—</div>
+                </div>
+                <div class="pstat">
+                    <div class="pstat-label">Amount Disbursed</div>
+                    <div class="pstat-value green" id="ps-disbursed">—</div>
+                </div>
+                <div class="pstat">
+                    <div class="pstat-label">Amount Remaining</div>
+                    <div class="pstat-value red" id="ps-remaining">—</div>
+                </div>
+            </div>
+
+            <!-- TOOLBAR -->
+            <div class="payroll-toolbar">
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Search by name, dept, ID..."
+                        oninput="applyFilters()">
+                </div>
+                <div class="filter-select-wrap">
+                    <select class="filter-select" id="statusFilter" onchange="applyFilters()">
+                        <option value="">All Status</option>
+                        <option value="pending">⏳ Pending</option>
+                        <option value="paid">✅ Paid</option>
+                    </select>
+                </div>
+                <div class="filter-select-wrap">
+                    <select class="filter-select" id="monthFilter" onchange="applyFilters()">
+                        <option value="">All Months</option>
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                </div>
+                <div class="filter-select-wrap">
+                    <select class="filter-select" id="qualFilter" onchange="applyFilters()">
+                        <option value="">All Sections</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Bulk Action Bar -->
+            <div class="bulk-action-bar" id="bulkBar">
+                <span class="bulk-count" id="bulkCount">0 selected</span>
+                <div class="bulk-actions">
+                    <button class="bulk-pay" onclick="paySelected()">💸 Pay Selected</button>
+                    <button onclick="exportSelected()">📥 Export Selected</button>
+                    <button onclick="clearSelection()">✕ Clear</button>
+                </div>
+            </div>
+
+            <!-- TABLE -->
+            <div class="card" style="padding:0;overflow:hidden">
+                <!-- Skeleton -->
+                <div id="skeletonLoader" style="padding:1rem">
+                    <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+                    <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+                    <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+                </div>
+                <!-- Empty -->
+                <div class="pg-empty" id="emptyState" style="display:none">
+                    <span>💸</span>
+                    <p>No payroll records found.</p>
+                </div>
+                <!-- Table -->
+                <div style="overflow-x:auto">
+                    <table class="payroll-table" id="payrollTable" style="display:none">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;padding-left:1.25rem"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                                <th>Employee</th>
+                                <th>Section</th>
+                                <th>Month</th>
+                                <th class="text-right">Final Salary</th>
+                                <th>Status</th>
+                                <th>Paid On</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payrollBody"></tbody>
+                    </table>
+                </div>
+                <!-- Footer count -->
+                <div id="tableFooter"
+                    style="padding:.65rem 1.25rem;border-top:1px solid var(--border);font-size:.77rem;color:var(--text-muted);display:none">
+                    Showing <span id="rowCount">0</span> record(s)
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Pay All Filtered Confirmation Dialog -->
+    <div class="confirm-dialog" id="payAllDialog">
+        <div class="confirm-box">
+            <span class="pay-confirm-icon">💸</span>
+            <h3>Confirm Bulk Payment</h3>
+            <p id="payAllDialogMsg" style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem">
+                Are you sure you want to mark these salaries as paid?
+            </p>
+            <div class="confirm-actions">
+                <button class="btn btn-secondary" onclick="closePayAllDialog()">Cancel</button>
+                <button class="btn" id="payAllDialogConfirmBtn" onclick="executePayAllFiltered()"
+                    style="background:rgba(16,185,129,.15);color:var(--success);border:1px solid rgba(16,185,129,.3)">
+                    ✅ Yes, Pay All
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pay Salary Confirmation Dialog -->
+    <div class="confirm-dialog" id="payDialog">
+        <div class="confirm-box">
+            <span class="pay-confirm-icon">💸</span>
+            <h3>Confirm Salary Payment</h3>
+            <p id="payDialogMsg" style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem">
+                Are you sure you want to mark this salary as paid?
+            </p>
+            <div class="confirm-actions">
+                <button class="btn btn-secondary" onclick="closePayDialog()">Cancel</button>
+                <button class="btn" id="payDialogConfirmBtn" onclick="confirmPayment()"
+                    style="background:rgba(16,185,129,.15);color:var(--success);border:1px solid rgba(16,185,129,.3)">
+                    ✅ Yes, Pay Salary
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ── Auth ── */
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        let allStaff = [];
+        let currentFilteredList = [];
+        let pendingPayId = null;
+        let selectedIds = new Set();
+
+        /* ── Sidebar helpers ── */
+        function logout() { localStorage.removeItem('token'); window.location.href = '/login.html'; }
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+        }
+
+        /* ── Toast ── */
+        function showToast(msg, type = 'info') {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = 'toast toast-' + type;
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 3500);
+        }
+
+        /* ── Date helpers ── */
+        const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const MONTH_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+        function monthMatches(staffMonth, filterMonth) {
+            if (!staffMonth || !filterMonth) return false;
+            const s = staffMonth.trim().toLowerCase();
+            const f = filterMonth.trim().toLowerCase();
+            if (s === f) return true;
+            if (s.startsWith(f.substring(0, 3)) || f.startsWith(s.substring(0, 3))) return true;
+            const fIdx = MONTH_FULL.findIndex(m => m.toLowerCase() === f);
+            const sIdx = MONTH_FULL.findIndex(m => m.toLowerCase() === s);
+            if (fIdx >= 0 && fIdx === sIdx) return true;
+            const fShort = MONTHS.find(m => m.toLowerCase() === f.substring(0, 3));
+            const sShort = s.substring(0, 3);
+            if (fShort && fShort.toLowerCase() === sShort) return true;
+            return false;
+        }
+
+        function fmtDateInline(dateStr, timeStr) {
+            if (!dateStr) return null;
+            const d = new Date(dateStr);
+            const day = d.getDate();
+            const mon = MONTHS[d.getMonth()];
+            const yr = d.getFullYear();
+            let result = `${day} ${mon} ${yr}`;
+            if (timeStr) {
+                const parts = timeStr.split(':');
+                let h = parseInt(parts[0]);
+                const m = parts[1];
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                h = h % 12 || 12;
+                result += ` · ${h}:${m} ${ampm}`;
+            }
+            return result;
+        }
+
+        /* ── Indian number formatter ── */
+        function inrFmt(amount) {
+            return '₹' + parseFloat(amount || 0).toLocaleString('en-IN', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+            });
+        }
+
+        /* ── Stats ── */
+        function updateStats(list) {
+            const total = allStaff.length;
+            const paid = allStaff.filter(s => s.payment_status === 'paid').length;
+            const pending = total - paid;
+            const totalAmt = allStaff.reduce((acc, s) => acc + (s.final_salary || 0), 0);
+            const disbursed = allStaff.filter(s => s.payment_status === 'paid')
+                .reduce((acc, s) => acc + (s.final_salary || 0), 0);
+            const remaining = totalAmt - disbursed;
+
+            document.getElementById('ps-total').textContent = total;
+            document.getElementById('ps-payable').textContent = inrFmt(totalAmt);
+            document.getElementById('ps-paid').textContent = paid;
+            document.getElementById('ps-pending').textContent = pending;
+            document.getElementById('ps-disbursed').textContent = inrFmt(disbursed);
+            document.getElementById('ps-remaining').textContent = inrFmt(remaining);
+        }
+
+        /* ── Populate filters ── */
+        function buildFilters() {
+            const sections = [...new Set(allStaff.map(s => s.section).filter(Boolean))].sort();
+            const qualSel = document.getElementById('qualFilter');
+            sections.forEach(q => {
+                const o = document.createElement('option');
+                o.value = q; o.textContent = q;
+                qualSel.appendChild(o);
+            });
+        }
+
+        /* ── Selection ── */
+        function toggleSelectAll() {
+            const checked = document.getElementById('selectAll').checked;
+            const pending = currentFilteredList.filter(s => s.payment_status !== 'paid');
+            if (checked) {
+                pending.forEach(s => selectedIds.add(s.id));
+            } else {
+                selectedIds.clear();
+            }
+            updateCheckboxes();
+            updateBulkBar();
+        }
+
+        function toggleRow(id) {
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+            } else {
+                selectedIds.add(id);
+            }
+            updateBulkBar();
+        }
+
+        function updateCheckboxes() {
+            document.querySelectorAll('.row-checkbox').forEach(cb => {
+                cb.checked = selectedIds.has(parseInt(cb.dataset.id));
+            });
+        }
+
+        function updateBulkBar() {
+            const bar = document.getElementById('bulkBar');
+            if (selectedIds.size > 0) {
+                bar.classList.add('active');
+                document.getElementById('bulkCount').textContent = `${selectedIds.size} selected`;
+            } else {
+                bar.classList.remove('active');
+            }
+        }
+
+        function clearSelection() {
+            selectedIds.clear();
+            document.getElementById('selectAll').checked = false;
+            updateCheckboxes();
+            updateBulkBar();
+        }
+
+        function paySelected() {
+            if (selectedIds.size === 0) return;
+            document.getElementById('payAllDialogMsg').textContent =
+                `Are you sure you want to mark ${selectedIds.size} salaries as paid?`;
+            document.getElementById('payAllDialog').classList.add('active');
+        }
+
+        function exportSelected() {
+            if (selectedIds.size === 0) return;
+            const selected = allStaff.filter(s => selectedIds.has(s.id));
+            const headers = ['ID', 'Name', 'Role', 'Department', 'Section', 'Month', 'Final Salary', 'Status'];
+            const rows = selected.map(s => [
+                s.employee_id || s.id, s.name, s.role || '', s.department || '',
+                s.section || '', s.month || '', s.final_salary || 0,
+                s.payment_status === 'paid' ? 'Paid' : 'Pending'
+            ]);
+            const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `payroll_export_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            showToast(`Exported ${selectedIds.size} records`, 'success');
+        }
+
+        /* ── Render table ── */
+        function renderTable(list) {
+            document.getElementById('skeletonLoader').style.display = 'none';
+            const table = document.getElementById('payrollTable');
+            const empty = document.getElementById('emptyState');
+            const footer = document.getElementById('tableFooter');
+
+            if (!list.length) {
+                table.style.display = 'none';
+                empty.style.display = 'block';
+                footer.style.display = 'none';
+                return;
+            }
+
+            table.style.display = 'table';
+            empty.style.display = 'none';
+            footer.style.display = 'block';
+            document.getElementById('rowCount').textContent = list.length;
+
+            document.getElementById('payrollBody').innerHTML = list.map(s => {
+                const isPaid = s.payment_status === 'paid';
+                const salary = (s.final_salary || 0).toLocaleString();
+                const paidOnStr = fmtDateInline(s.paid_date, s.paid_time);
+
+                const statusBadge = isPaid
+                    ? '<span class="badge-paid">✅ Paid</span>'
+                    : '<span class="badge-pay-pending">⏳ Pending</span>';
+
+                const paidOnCell = isPaid && paidOnStr
+                    ? `<span class="paidon">${paidOnStr}</span>`
+                    : '<span style="color:var(--text-muted);font-size:.78rem">—</span>';
+
+                const actionBtn = isPaid
+                    ? '<button class="btn-act-done" disabled>✔ Paid</button>'
+                    : `<button class="btn-act-pay" onclick="openPayDialog(${s.id},'${s.name.replace(/'/g, "\\'")}')">Pay Salary</button>`;
+
+                const isChecked = selectedIds.has(s.id) ? 'checked' : '';
+                const checkboxDisabled = isPaid ? 'disabled' : '';
+
+                return `<tr id="prow-${s.id}">
+                    <td style="padding-left:1.25rem;width:40px"><input type="checkbox" class="row-checkbox" data-id="${s.id}" ${isChecked} ${checkboxDisabled} onchange="toggleRow(${s.id})"></td>
+                    <td>
+                        <div class="emp-cell">
+                            <a href="staff_detail.html?id=${s.id}" class="en" style="text-decoration:none; color:var(--text-bright);" onmouseover="this.style.color='var(--primary)';this.style.textDecoration='underline'" onmouseout="this.style.color='var(--text-bright)';this.style.textDecoration='none'">${s.name}</a>
+                            <span class="eid">${s.employee_id || '#' + s.id}${s.role ? ' · ' + s.role : ''}</span>
+                        </div>
+                    </td>
+                    <td><span class="badge">${s.section || '—'}</span></td>
+                    <td style="color:var(--text-muted)">${s.month || '—'}</td>
+                    <td class="text-right" style="font-weight:600;color:var(--text-bright)">₹${salary}</td>
+                    <td>${statusBadge}</td>
+                    <td>${paidOnCell}</td>
+                    <td>${actionBtn}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        /* ── Filters ── */
+        function applyFilters() {
+            const q = document.getElementById('searchInput').value.toLowerCase().trim();
+            const status = document.getElementById('statusFilter').value;
+            const month = document.getElementById('monthFilter').value;
+            const qual = document.getElementById('qualFilter').value;
+
+            let result = allStaff;
+            if (q) result = result.filter(s =>
+                s.name.toLowerCase().includes(q) ||
+                (s.department || '').toLowerCase().includes(q) ||
+                (s.employee_id || '').toLowerCase().includes(q) ||
+                (s.role || '').toLowerCase().includes(q) ||
+                (s.section || '').toLowerCase().includes(q)
+            );
+            if (status) result = result.filter(s => (s.payment_status || 'pending') === status);
+            if (month) result = result.filter(s => monthMatches(s.month, month));
+            if (qual) result = result.filter(s => s.section === qual);
+
+            currentFilteredList = result;
+            renderTable(result);
+        }
+
+        /* ── Bulk Pay ── */
+        function payAllFiltered() {
+            const pendingStaff = currentFilteredList.filter(s => s.payment_status !== 'paid');
+            if (pendingStaff.length === 0) return;
+
+            document.getElementById('payAllDialogMsg').textContent =
+                `Are you sure you want to mark ${pendingStaff.length} salaries as paid?`;
+            document.getElementById('payAllDialog').classList.add('active');
+        }
+
+        function closePayAllDialog() {
+            document.getElementById('payAllDialog').classList.remove('active');
+        }
+
+        async function executePayAllFiltered() {
+            // Use selected IDs if available, otherwise fall back to filtered pending
+            let ids;
+            if (selectedIds.size > 0) {
+                ids = [...selectedIds].filter(id => {
+                    const s = allStaff.find(x => x.id === id);
+                    return s && s.payment_status !== 'paid';
+                });
+            } else {
+                const pendingStaff = currentFilteredList.filter(s => s.payment_status !== 'paid');
+                ids = pendingStaff.map(s => s.id);
+            }
+            if (ids.length === 0) return;
+
+            const btn = document.getElementById('payAllDialogConfirmBtn');
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+
+            try {
+                const res = await fetch('/api/staff/bulk-pay', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ ids })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    const now = new Date();
+                    const d = now.toISOString().split('T')[0];
+                    const t = now.toTimeString().split(' ')[0];
+                    ids.forEach(id => {
+                        const s = allStaff.find(x => x.id === id);
+                        if (s) {
+                            s.payment_status = 'paid';
+                            s.paid_date = d;
+                            s.paid_time = t;
+                        }
+                    });
+                    selectedIds.clear();
+                    updateBulkBar();
+                    updateStats(allStaff);
+                    applyFilters();
+                    showToast('✅ ' + (data.message || `Paid ${ids.length} salaries!`), 'success');
+                } else {
+                    showToast(data.error || 'Payment failed', 'error');
+                }
+            } catch (e) {
+                console.error("Bulk Pay Error:", e);
+                showToast('Network error. Please make sure you restarted the Node.js server!', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `✅ Yes, Pay All`;
+                closePayAllDialog();
+            }
+        }
+
+        /* ── Pay Dialog ── */
+        function openPayDialog(id, name) {
+            pendingPayId = id;
+            document.getElementById('payDialogMsg').textContent =
+                `Pay salary to "${name}"? This action will record today's date & time.`;
+            document.getElementById('payDialog').classList.add('active');
+        }
+
+        function closePayDialog() {
+            document.getElementById('payDialog').classList.remove('active');
+            pendingPayId = null;
+        }
+
+        async function confirmPayment() {
+            if (!pendingPayId) return;
+            const btn = document.getElementById('payDialogConfirmBtn');
+            btn.disabled = true;
+            btn.textContent = 'Processing…';
+
+            try {
+                const res = await fetch(`/api/staff/${pendingPayId}/pay`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    const now = new Date();
+                    const s = allStaff.find(x => x.id === pendingPayId);
+                    if (s) {
+                        s.payment_status = 'paid';
+                        s.paid_date = now.toISOString().split('T')[0];
+                        s.paid_time = now.toTimeString().split(' ')[0];
+                    }
+                    updateStats(allStaff);
+                    applyFilters();
+                    showToast('✅ ' + (data.message || 'Salary paid successfully!'), 'success');
+                } else {
+                    showToast(data.error || 'Payment failed', 'error');
+                }
+            } catch (e) {
+                showToast('Network error. Try again.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '✅ Yes, Pay Salary';
+                closePayDialog();
+            }
+        }
+
+        /* ── Load ── */
+        async function loadPayroll() {
+            try {
+                const res = await fetch('/api/staff', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!res.ok) throw new Error('Auth failed');
+                allStaff = await res.json();
+                updateStats(allStaff);
+                buildFilters();
+                currentFilteredList = allStaff;
+                renderTable(allStaff);
+
+                // set cycle label
+                const now = new Date();
+                const yr = now.getFullYear();
+                const mo = now.getMonth() + 1;
+                document.getElementById('cycleLabel').textContent =
+                    `Cycle: ${yr}-${mo <= 6 ? 'H1' : 'H2'}`;
+
+                // Apply URL filter if present
+                const urlParams = new URLSearchParams(window.location.search);
+                const statusParam = urlParams.get('status');
+                if (statusParam) {
+                    document.getElementById('statusFilter').value = statusParam;
+                    applyFilters();
+                }
+            } catch (e) {
+                showToast('Failed to load payroll data', 'error');
+                document.getElementById('skeletonLoader').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+            }
+        }
+
+        loadPayroll();
+    </script>
+</body>
+
+</html>

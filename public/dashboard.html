@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - PayNest Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">💰</div>
+            <h2>PayNest Pro</h2>
+        </div>
+        <nav>
+            <a href="dashboard.html" class="active"><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="staff.html"><span class="nav-icon">👥</span> Staff Management</a>
+            <a href="upload.html"><span class="nav-icon">🔄</span> Import & Export</a>
+            <a href="payroll.html"><span class="nav-icon">💸</span> Payroll Management</a>
+            <a href="salary.html"><span class="nav-icon">💵</span> Salary Slips</a>
+            <a href="ai_assistant.html"><span class="nav-icon">🤖</span> AI Assistant</a>
+        </nav>
+        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div style="display:flex;align-items:center;gap:1rem">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                <div>
+                    <h1>Overview</h1>
+                    <p style="color:var(--text-muted);font-size:.72rem;margin-top:2px" id="subtitleText">Your payroll
+                        summary</p>
+                </div>
+            </div>
+            <div class="topbar-right" style="display:flex;align-items:center;gap:1.5rem">
+                <div class="last-updated" id="lastUpdated">
+                    <span class="update-dot"></span>
+                    <span>—</span>
+                </div>
+                <span style="color:var(--text-muted);font-size:.82rem">Welcome, Admin</span>
+            </div>
+        </header>
+
+        <div class="page-container">
+
+            <!-- SECTION 1: TOP SUMMARY CARDS -->
+            <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 24px;">
+                <div class="card summary-card" style="border-top: 2px solid #8B5CF6; display: flex; flex-direction: column; gap: 8px; padding: 16px 20px; cursor:pointer;" onclick="window.location.href='staff.html'">
+                    <div class="sc-top" style="display: flex; align-items: center; gap: 12px;">
+                        <div class="sc-icon" style="color: #A78BFA; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05);">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        </div>
+                        <span class="sc-label" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 600;">TOTAL STAFF</span>
+                    </div>
+                    <div class="sc-value" id="totalStaff" style="font-size: 28px; font-weight: 600; color: #fff; margin-top: 4px;">—</div>
+                </div>
+                <div class="card summary-card" style="border-top: 2px solid #10B981; display: flex; flex-direction: column; gap: 8px; padding: 16px 20px; cursor:pointer;" onclick="window.location.href='payroll.html'">
+                    <div class="sc-top" style="display: flex; align-items: center; gap: 12px;">
+                        <div class="sc-icon" style="color: #34D399; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05);">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        </div>
+                        <span class="sc-label" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 600;">TOTAL SALARY</span>
+                    </div>
+                    <div class="sc-value" id="totalPayout" style="font-size: 28px; font-weight: 600; color: #fff; margin-top: 4px;">—</div>
+                </div>
+                <div class="card summary-card" style="border-top: 2px solid #F59E0B; display: flex; flex-direction: column; gap: 8px; padding: 16px 20px;">
+                    <div class="sc-top" style="display: flex; align-items: center; gap: 12px;">
+                        <div class="sc-icon" style="color: #FBBF24; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05);">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        </div>
+                        <span class="sc-label" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 600;">ATTENDANCE RATE</span>
+                    </div>
+                    <div class="sc-value" id="attendanceRate" style="font-size: 28px; font-weight: 600; color: #fff; margin-top: 4px;">—</div>
+                    <div class="sc-footer" style="display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: auto;">
+                        <span class="sc-sub" style="color: var(--text-muted);">Overall staff attendance</span>
+                    </div>
+                    <div style="width:100%; height:3px; background:var(--glass-border); border-radius:2px; margin-top:4px; overflow:hidden;">
+                        <div id="attendanceProgress" style="width:0%; height:100%; background:var(--success); border-radius:2px; transition:width 1s ease;"></div>
+                    </div>
+                </div>
+                <div class="card summary-card" style="border-top: 2px solid #EF4444; display: flex; flex-direction: column; gap: 8px; padding: 16px 20px; cursor:pointer;" onclick="window.location.href='payroll.html?status=pending'">
+                    <div class="sc-top" style="display: flex; align-items: center; gap: 12px;">
+                        <div class="sc-icon" style="color: #F87171; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05);">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        </div>
+                        <span class="sc-label" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 600;">PENDING PAYROLL</span>
+                    </div>
+                    <div class="sc-value" id="pendingPayroll" style="font-size: 28px; font-weight: 600; color: #fff; margin-top: 4px;">—</div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: CHARTS (side by side) -->
+            <div class="charts-grid" style="display: grid; grid-template-columns: 60% calc(40% - 24px); gap: 24px; margin-bottom: 24px;">
+                <div class="card">
+                    <div class="chart-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div>
+                            <h3 style="font-size: 15px; color: #fff; font-weight: 600;">Monthly Salary Trend</h3>
+                            <span style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Salary payout analytics over time</span>
+                        </div>
+                        <div id="trendIndicator" style="font-size: 0.85rem; font-weight: 500;"></div>
+                    </div>
+                    <div style="height: 260px; width: 100%; position: relative;">
+                        <canvas id="salaryChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="chart-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3 style="font-size: 15px; color: #fff; font-weight: 600;">Section Distribution</h3>
+                        <span style="font-size: 11px; color: var(--text-muted);">By Salary %</span>
+                    </div>
+                    <div style="height: 220px; display: flex; align-items: center; justify-content: center; position: relative;">
+                        <canvas id="deptChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: RECENT STAFF TABLE -->
+            <div class="card" style="margin-bottom:24px; padding: 0; overflow: hidden;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 15px; color: #fff; font-weight: 600;">Recent Staff Entries</h3>
+                    <a href="staff.html" style="font-size: 13px; color: var(--primary); text-decoration: none; font-weight: 500;">View All →</a>
+                </div>
+                <div style="overflow-x:auto">
+                    <table id="recentStaffTable" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th style="padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); color: var(--text-muted); font-weight: 500; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; padding-left: 20px;">Name</th>
+                                <th style="padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); color: var(--text-muted); font-weight: 500; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Role</th>
+                                <th style="padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); color: var(--text-muted); font-weight: 500; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Dept</th>
+                                <th class="text-right" style="padding: 12px 16px; text-align: right; border-bottom: 1px solid var(--border); color: var(--text-muted); font-weight: 500; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Final Salary</th>
+                                <th style="padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); color: var(--text-muted); font-weight: 500; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Leave Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentStaffBody">
+                            <tr>
+                                <td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECTION 4 & 5: ACTIVITY + QUICK ACTIONS -->
+            <div class="bottom-grid" style="display: grid; grid-template-columns: 1fr; gap: 24px;">
+
+                <!-- Quick Actions Panel -->
+                <div class="card">
+                    <h3 style="font-size: 15px; color: #fff; font-weight: 600; margin-bottom: 16px;">Quick Actions</h3>
+                    <div class="quick-actions-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <a href="upload.html" class="quick-action" style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 12px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s; text-decoration: none; color: #fff;">
+                            <div class="qa-icon" style="color:#60A5FA; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05);"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></div>
+                            <span style="font-size: 13px; font-weight: 500;">Import & Export</span>
+                        </a>
+                        <a href="staff.html" class="quick-action" onclick="sessionStorage.setItem('openAddStaff','1')" style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 12px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s; text-decoration: none; color: #fff;">
+                            <div class="qa-icon" style="color:#A78BFA; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05);"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg></div>
+                            <span style="font-size: 13px; font-weight: 500;">Add Staff</span>
+                        </a>
+                        <a href="payroll.html" class="quick-action" style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 12px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s; text-decoration: none; color: #fff;">
+                            <div class="qa-icon" style="color:#34D399; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05);"><svg viewBox="0 0 24 24" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg></div>
+                            <span style="font-size: 13px; font-weight: 500;">Payroll</span>
+                        </a>
+                        <a href="salary.html" class="quick-action" style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 12px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s; text-decoration: none; color: #fff;">
+                            <div class="qa-icon" style="color:#F472B6; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05);"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg></div>
+                            <span style="font-size: 13px; font-weight: 500;">Payslips</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        function logout() { localStorage.removeItem('token'); window.location.href = '/login.html'; }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('active'); }
+        function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('active'); }
+
+        function animateCount(el, target, prefix = '', suffix = '', duration = 1200) {
+            let start = 0;
+            const step = target / (duration / 16);
+            if (target === 0) { el.innerHTML = prefix + '0' + suffix; return; }
+            const timer = setInterval(() => {
+                start += step;
+                if (start >= target) { start = target; clearInterval(timer); }
+                el.innerHTML = prefix + Math.floor(start).toLocaleString() + suffix;
+            }, 16);
+        }
+
+        function updateLastUpdated() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+            const dateStr = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+            document.getElementById('lastUpdated').innerHTML =
+                `<span class="update-dot"></span><span>Last updated: ${dateStr}, ${timeStr}</span>`;
+        }
+
+        const avatarColors = ['avatar-blue', 'avatar-green', 'avatar-purple', 'avatar-orange', 'avatar-pink'];
+        function getInitials(name) { return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2); }
+
+        async function loadDashboard() {
+            try {
+                // 1. Dashboard stats (includes section distribution & salary breakdown)
+                const statsRes = await fetch('/api/staff/dashboard', { headers: { 'Authorization': 'Bearer ' + token } });
+                const stats = await statsRes.json();
+                if (statsRes.ok) {
+                    animateCount(document.getElementById('totalStaff'), stats.totalStaff);
+                    animateCount(document.getElementById('totalPayout'), stats.totalPayout || 0, '₹');
+                }
+
+                // Pending payroll
+                document.getElementById('pendingPayroll').innerHTML = (stats.pendingPayroll || 0) + ' <span style="font-size:.75rem;color:var(--text-muted);font-weight:500">staff</span>';
+
+                // 2. Load staff for table + attendance
+                const staffRes = await fetch('/api/staff', { headers: { 'Authorization': 'Bearer ' + token } });
+                const staff = await staffRes.json();
+
+                // Set attendance from backend
+                const attendanceRate = stats.attendanceRate !== undefined ? stats.attendanceRate : 0;
+                animateCount(document.getElementById('attendanceRate'), attendanceRate, '', '%');
+                setTimeout(() => { document.getElementById('attendanceProgress').style.width = attendanceRate + '%'; }, 100);
+
+                // Update last updated timestamp
+                updateLastUpdated();
+
+                // --- MONTHLY SALARY TREND CHART ---
+                const monthOrder = {
+                    'january': 1, 'jan': 1, 'february': 2, 'feb': 2, 'march': 3, 'mar': 3,
+                    'april': 4, 'apr': 4, 'may': 5, 'june': 6, 'jun': 6, 'july': 7, 'jul': 7,
+                    'august': 8, 'aug': 8, 'september': 9, 'sep': 9, 'october': 10, 'oct': 10,
+                    'november': 11, 'nov': 11, 'december': 12, 'dec': 12
+                };
+
+                let trendData = stats.monthlyTrend || [];
+                // Sort by month
+                trendData.sort((a, b) => {
+                    const m1 = (a.month || '').toLowerCase();
+                    const m2 = (b.month || '').toLowerCase();
+                    return (monthOrder[m1] || 99) - (monthOrder[m2] || 99);
+                });
+
+                const trendLabels = trendData.map(d => d.month);
+                const trendValues = trendData.map(d => d.totalPayout);
+
+                // Optional indicator logic
+                if (trendValues.length >= 2) {
+                    const last = trendValues[trendValues.length - 1];
+                    const prev = trendValues[trendValues.length - 2];
+                    if (prev > 0) {
+                        const diff = ((last - prev) / prev) * 100;
+                        const indicatorSpan = document.getElementById('trendIndicator');
+                        if (indicatorSpan) {
+                            indicatorSpan.innerHTML = diff >= 0
+                                ? `<div style="display:flex;align-items:center;gap:6px;background:rgba(16,185,129,0.12);color:#10b981;padding:4px 12px;border-radius:20px;font-size:0.75rem;border:1px solid rgba(16,185,129,0.2);box-shadow:0 0 12px rgba(16,185,129,0.08)">
+                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                                     <span style="font-weight:600;letter-spacing:0.5px">${diff.toFixed(1)}%</span>
+                                   </div>`
+                                : `<div style="display:flex;align-items:center;gap:6px;background:rgba(244,63,94,0.12);color:#f43f5e;padding:4px 12px;border-radius:20px;font-size:0.75rem;border:1px solid rgba(244,63,94,0.2);box-shadow:0 0 12px rgba(244,63,94,0.08)">
+                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
+                                     <span style="font-weight:600;letter-spacing:0.5px">${Math.abs(diff).toFixed(1)}%</span>
+                                   </div>`;
+                        }
+                    }
+                }
+
+                const ctx = document.getElementById('salaryChart').getContext('2d');
+
+                // Soft Modern Gradient
+                const gradient = ctx.createLinearGradient(0, 0, 0, 380);
+                gradient.addColorStop(0, 'rgba(99, 102, 241, 0.45)'); 
+                gradient.addColorStop(0.5, 'rgba(99, 102, 241, 0.15)');
+                gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+
+                const glowPlugin = {
+                    id: 'glowPlugin',
+                    beforeDatasetsDraw: chart => {
+                        if (chart.canvas.id !== 'salaryChart') return;
+                        const ctx = chart.ctx;
+                        ctx.save();
+                        ctx.shadowColor = 'rgba(99, 102, 241, 0.5)';
+                        ctx.shadowBlur = 16;
+                        ctx.shadowOffsetX = 0;
+                        ctx.shadowOffsetY = 8;
+                    },
+                    afterDatasetsDraw: chart => {
+                        if (chart.canvas.id === 'salaryChart') {
+                            chart.ctx.restore();
+                        }
+                    }
+                };
+
+                if (window.salaryChartInstance) window.salaryChartInstance.destroy();
+                window.salaryChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: trendLabels,
+                        datasets: [{
+                            label: 'Total Salary',
+                            data: trendValues,
+                            borderColor: '#818cf8',
+                            backgroundColor: gradient,
+                            borderWidth: 3,
+                            pointBackgroundColor: '#0f172a',
+                            pointBorderColor: '#818cf8',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            pointHoverBackgroundColor: '#ffffff',
+                            pointHoverBorderColor: '#818cf8',
+                            pointHoverBorderWidth: 3,
+                            fill: true,
+                            tension: 0.5
+                        }]
+                    },
+                    plugins: [glowPlugin],
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: { padding: { top: 10, bottom: 10 } },
+                        animation: {
+                            duration: 2000,
+                            easing: 'easeOutQuart'
+                        },
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        plugins: { 
+                            legend: { display: false }, 
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                                titleColor: '#f8fafc',
+                                titleFont: { family: 'Inter', size: 14, weight: '600' },
+                                bodyColor: '#e2e8f0',
+                                bodyFont: { family: 'Inter', size: 14, weight: '500' },
+                                borderColor: 'rgba(99, 102, 241, 0.2)',
+                                borderWidth: 1,
+                                padding: 14,
+                                displayColors: false,
+                                cornerRadius: 10,
+                                caretSize: 6,
+                                callbacks: { 
+                                    title: (ctx) => {
+                                        const year = new Date().getFullYear();
+                                        return ctx[0].label + ' ' + year;
+                                    },
+                                    label: (ctx) => '₹' + ctx.parsed.y.toLocaleString('en-IN', { maximumFractionDigits: 0 })
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { 
+                                ticks: { color: '#64748b', font: { family: 'Inter', size: 12 }, padding: 12 }, 
+                                grid: { display: false },
+                                border: { display: false }
+                            },
+                            y: { 
+                                beginAtZero: true,
+                                ticks: { 
+                                    color: '#64748b', 
+                                    font: { family: 'Inter', size: 12 },
+                                    padding: 15,
+                                    maxTicksLimit: 6,
+                                    callback: v => '₹' + (v >= 10000000 ? (v/10000000).toFixed(1)+'Cr' : v >= 100000 ? (v/100000).toFixed(1)+'L' : v >= 1000 ? (v/1000).toFixed(0)+'K' : v) 
+                                }, 
+                                grid: { color: 'rgba(148, 163, 184, 0.12)', drawBorder: false },
+                                border: { display: false, dash: [4, 4] }
+                            }
+                        }
+                    }
+                });
+
+                // --- SECTION PIE CHART (use backend stats) ---
+                let deptLabels = [], deptValues = [];
+                if (stats.sectionDistribution && stats.sectionDistribution.length > 0) {
+                    deptLabels = stats.sectionDistribution.map(s => s.section_name);
+                    deptValues = stats.sectionDistribution.map(s => parseFloat(s.total_salary) || 0);
+                } else {
+                    // Fallback: compute from staff array
+                    const sectionMap = {};
+                    staff.forEach(s => {
+                        const sec = (s.section && s.section.trim()) || (s.department && s.department.trim()) || 'Not Specified';
+                        sectionMap[sec] = (sectionMap[sec] || 0) + (s.final_salary || s.net || 0);
+                    });
+                    deptLabels = Object.keys(sectionMap);
+                    deptValues = Object.values(sectionMap);
+                }
+                const pieColors = ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ec4899', '#ef4444', '#06b6d4', '#f97316', '#14b8a6', '#a855f7', '#f43f5e', '#eab308'];
+                if (window.deptChartInstance) window.deptChartInstance.destroy();
+                window.deptChartInstance = new Chart(document.getElementById('deptChart').getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: deptLabels.length ? deptLabels : ['No Data'],
+                        datasets: [{
+                            data: deptValues.length ? deptValues : [1],
+                            backgroundColor: deptLabels.length ? pieColors.slice(0, deptLabels.length) : ['rgba(148,163,184,0.2)'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '60%',
+                        layout: {
+                            padding: { left: 10, right: 10 }
+                        },
+                        plugins: {
+                            legend: { 
+                                display: true,
+                                position: 'right',
+                                labels: {
+                                    color: '#cbd5e1',
+                                    font: { family: 'Inter', size: 12 },
+                                    padding: 15,
+                                    boxWidth: 14,
+                                    boxHeight: 14,
+                                    useBorderRadius: true,
+                                    borderRadius: 3
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                                titleColor: '#f8fafc',
+                                titleFont: { family: 'Inter', size: 13, weight: '600' },
+                                bodyColor: '#e2e8f0',
+                                bodyFont: { family: 'Inter', size: 13 },
+                                borderColor: 'rgba(99, 102, 241, 0.15)',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 8,
+                                callbacks: {
+                                    label: (ctx) => {
+                                        const val = ctx.parsed;
+                                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                        const pct = ((val / total) * 100).toFixed(1);
+                                        return `${ctx.label}: ₹${val.toLocaleString('en-IN')} (${pct}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // --- RECENT STAFF TABLE (last 5 from DB with timestamps) ---
+                const recentList = stats.recentlyAdded && stats.recentlyAdded.length > 0 ? stats.recentlyAdded : staff.slice(0, 5);
+                const tbody = document.getElementById('recentStaffBody');
+
+                function timeAgo(dateStr) {
+                    if (!dateStr) return '';
+                    const now = new Date();
+                    const date = new Date(dateStr);
+                    const diffMs = now - date;
+                    const diffMin = Math.floor(diffMs / 60000);
+                    const diffHr = Math.floor(diffMs / 3600000);
+                    const diffDay = Math.floor(diffMs / 86400000);
+                    if (diffMin < 1) return 'Just now';
+                    if (diffMin < 60) return `${diffMin}m ago`;
+                    if (diffHr < 24) return `${diffHr}h ago`;
+                    if (diffDay < 7) return `${diffDay}d ago`;
+                    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                }
+
+                if (recentList.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem">No staff records yet</td></tr>';
+                } else {
+                    tbody.innerHTML = recentList.map((s, i) => {
+                        const unpaid = s.unpaid_leaves || 0;
+                        const statusClass = unpaid > 0 ? 'badge-pending' : 'badge-processed';
+                        const statusText = unpaid > 0 ? `${unpaid} Unpaid` : 'All Paid';
+                        const addedTime = timeAgo(s.created_at);
+                        return `
+                        <tr>
+                            <td>
+                                <div class="staff-row">
+                                    <div class="staff-avatar ${avatarColors[i % avatarColors.length]}">${getInitials(s.name)}</div>
+                                    <div>
+                                        <strong>${s.name}</strong>
+                                        <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px">${addedTime}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="color:var(--text-muted);font-size:.8rem">${s.role || '-'}</td>
+                            <td><span class="badge">${s.department}</span></td>
+                            <td class="text-right">₹${(s.final_salary || s.net || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                            <td><span class="${statusClass}">${statusText}</span></td>
+                        </tr>
+                    `}).join('');
+                }
+
+            } catch (e) { console.error('Dashboard load error:', e); }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+
+</html>

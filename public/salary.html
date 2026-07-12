@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Slips - PayNest Pro</title>
+    <meta name="description" content="Enterprise salary slip management with PDF export and QR verification.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .salary-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-card {
+            background: var(--card-bg, var(--glass-bg));
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: .85rem 1.2rem;
+            transition: transform 180ms ease, box-shadow 180ms ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .summary-card:nth-child(1)::before { background: linear-gradient(90deg, #3b82f6, #6366f1); }
+        .summary-card:nth-child(2)::before { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+        .summary-card:nth-child(3)::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .summary-card:nth-child(4)::before { background: linear-gradient(90deg, #22c55e, #16a34a); }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.08);
+        }
+
+        .summary-card .label {
+            font-size: .65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: .35rem;
+            font-weight: 600;
+        }
+
+        .summary-card .value {
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+
+        .summary-card .value.primary { color: var(--primary); }
+        .summary-card .value.success { color: var(--success); }
+        .summary-card .value.danger { color: var(--danger); }
+        .summary-card .value.warn { color: #f59e0b; }
+
+        /* Table */
+        .salary-table th {
+            white-space: nowrap;
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .salary-table td {
+            font-size: .82rem;
+            vertical-align: middle;
+            padding: 1.1rem 1.15rem;
+        }
+
+        .emp-info { display: flex; flex-direction: column; gap: 2px; }
+        .emp-name { font-weight: 600; color: var(--text-main); font-size: .84rem; }
+        .emp-id { font-size: .68rem; color: var(--text-muted); }
+        .emp-qual { font-size: .64rem; color: var(--primary); opacity: .75; margin-top: 1px; }
+
+        .salary-breakdown { display: flex; flex-direction: column; gap: 2px; font-size: .74rem; }
+        .salary-ded { color: var(--danger); }
+        .salary-pf { color: #f59e0b; }
+
+        .final-salary { font-weight: 800; font-size: .95rem; color: var(--success); white-space: nowrap; }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .toolbar .search-bar { flex: 1; min-width: 200px; max-width: 400px; }
+
+        .month-filter { display: flex; gap: .5rem; align-items: center; }
+        .month-filter select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: var(--glass-bg);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1rem;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: .5rem 2.2rem .5rem .85rem;
+            border-radius: 8px;
+            font-size: .82rem;
+            font-family: inherit;
+            cursor: pointer;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        .month-filter select:focus { border-color: var(--primary); }
+        .month-filter select option { background-color: #0d1229; color: #f8fafc; }
+
+        /* Status badges */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            padding: .25rem .65rem;
+            border-radius: 20px;
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .02em;
+        }
+        .status-paid { background: rgba(34,197,94,.12); color: #16a34a; }
+        .status-pending { background: rgba(239,68,68,.12); color: #ef4444; }
+        .status-processing { background: rgba(245,158,11,.12); color: #d97706; }
+        .status-failed { background: rgba(220,38,38,.12); color: #dc2626; }
+
+        /* Month badge */
+        .month-badge {
+            display: inline-block;
+            padding: .15rem .5rem;
+            border-radius: 12px;
+            font-size: .68rem;
+            font-weight: 600;
+            background: rgba(139, 92, 246, 0.12);
+            color: #8b5cf6;
+        }
+
+        /* Download button - outline style */
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: .3rem .7rem;
+            border-radius: 6px;
+            font-size: .72rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 180ms ease;
+            font-family: inherit;
+        }
+        .btn-download:hover {
+            background: rgba(59, 130, 246, 0.1);
+            transform: translateY(-1px);
+        }
+        .btn-download:active { transform: scale(.97); }
+
+        /* Unavailable - grey */
+        .slip-unavailable {
+            font-size: .7rem;
+            color: var(--text-muted);
+            background: rgba(148,163,184,.08);
+            padding: .3rem .6rem;
+            border-radius: 6px;
+            display: inline-block;
+            border: 1px solid var(--border);
+            opacity: .6;
+        }
+
+        /* Slip ID */
+        .slip-id {
+            font-size: .66rem;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">💰</div>
+            <h2>PayNest Pro</h2>
+        </div>
+        <nav>
+            <a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="staff.html"><span class="nav-icon">👥</span> Staff Management</a>
+            <a href="upload.html"><span class="nav-icon">🔄</span> Import & Export</a>
+            <a href="payroll.html"><span class="nav-icon">💸</span> Payroll Management</a>
+            <a href="salary.html" class="active"><span class="nav-icon">💵</span> Salary Slips</a>
+            <a href="ai_assistant.html"><span class="nav-icon">🤖</span> AI Assistant</a>
+        </nav>
+        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div style="display:flex;align-items:center;gap:1rem">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                <h1>💵 Salary Slips</h1>
+            </div>
+        </header>
+
+        <div class="page-container">
+            <!-- SUMMARY CARDS -->
+            <div class="salary-summary" id="summaryCards">
+                <div class="summary-card">
+                    <div class="label">Total Staff</div>
+                    <div class="value primary" id="totalStaff">0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Total Gross</div>
+                    <div class="value warn" id="totalGross">₹0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Total Deductions</div>
+                    <div class="value danger" id="totalDed">₹0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Net Payroll</div>
+                    <div class="value success" id="netPayroll">₹0</div>
+                </div>
+            </div>
+
+            <!-- TOOLBAR -->
+            <div class="toolbar">
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Search by ID, name, role, department..."
+                        oninput="filterSalary()">
+                </div>
+                <div class="month-filter">
+                    <select id="monthFilter" onchange="filterSalary()">
+                        <option value="">All Months</option>
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- TABLE -->
+            <div class="card" style="padding:0;overflow:hidden">
+                <div id="skeletonLoader" style="padding:1rem">
+                    <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+                    <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+                    <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+                </div>
+                <div id="emptyState" class="empty-state" style="display:none">
+                    <span class="empty-icon">💵</span>
+                    <p>No salary data available.</p>
+                </div>
+                <div style="overflow-x:auto">
+                    <table id="salaryTable" class="salary-table" style="display:none">
+                        <thead>
+                            <tr>
+                                <th>Slip ID</th>
+                                <th>Employee</th>
+                                <th>Dept / Role</th>
+                                <th>Month</th>
+                                <th class="text-right">Gross</th>
+                                <th class="text-right">Deductions</th>
+                                <th class="text-right">Net Salary</th>
+                                <th class="text-center">Status</th>
+                                <th>Salary Slip</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- Footer -->
+                <div id="tableFooter" style="padding:.65rem 1.25rem;border-top:1px solid var(--border);font-size:.77rem;color:var(--text-muted);display:none">
+                    Showing <span id="rowCount">0</span> record(s)
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+        let allStaff = [];
+
+        function logout() { localStorage.removeItem('token'); window.location.href = '/login.html'; }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('active'); }
+        function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('active'); }
+        function showToast(msg, type = 'info') {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = 'toast toast-' + type;
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 3500);
+        }
+
+        const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+        function monthMatches(staffMonth, filterMonth) {
+            if (!staffMonth || !filterMonth) return false;
+            const s = staffMonth.trim().toLowerCase();
+            const f = filterMonth.trim().toLowerCase();
+            if (s === f) return true;
+            if (s.startsWith(f.substring(0, 3)) || f.startsWith(s.substring(0, 3))) return true;
+            const fIdx = MONTHS_FULL.findIndex(m => m.toLowerCase() === f);
+            const sIdx = MONTHS_FULL.findIndex(m => m.toLowerCase() === s);
+            if (fIdx >= 0 && fIdx === sIdx) return true;
+            const sShort = s.substring(0, 3);
+            const fShort = MONTHS_SHORT.find(m => m.toLowerCase() === f.substring(0, 3));
+            if (fShort && fShort.toLowerCase() === sShort) return true;
+            return false;
+        }
+
+        function getMonthShort(month) {
+            if (!month) return '—';
+            const idx = MONTHS_FULL.findIndex(m => m.toLowerCase() === month.trim().toLowerCase());
+            if (idx >= 0) return MONTHS_SHORT[idx];
+            return month.substring(0, 3);
+        }
+
+        function generateSlipId(staffId, month) {
+            const yr = new Date().getFullYear().toString().slice(-2);
+            const mo = month ? getMonthShort(month).toUpperCase() : 'XX';
+            return `SLP-${yr}${mo}-${String(staffId).padStart(4, '0')}`;
+        }
+
+        /* ── Indian number formatter ── */
+        function inrFmt(amount) {
+            return '₹' + parseFloat(amount || 0).toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            });
+        }
+
+        async function loadSalaryData() {
+            try {
+                const res = await fetch('/api/staff', { headers: { 'Authorization': 'Bearer ' + token } });
+                allStaff = await res.json();
+                renderSalary(allStaff);
+            } catch (e) { showToast('Failed to load data', 'error'); }
+        }
+
+        function updateSummary(list) {
+            document.getElementById('totalStaff').textContent = list.length;
+            const totalGross = list.reduce((s, x) => s + (x.gross || 0), 0);
+            const totalDed = list.reduce((s, x) => s + (x.deduction || 0) + (x.pf || 0) + (x.tax || 0), 0);
+            const netPay = list.reduce((s, x) => s + (x.final_salary || 0), 0);
+            document.getElementById('totalGross').textContent = inrFmt(totalGross);
+            document.getElementById('totalDed').textContent = '-' + inrFmt(totalDed);
+            document.getElementById('netPayroll').textContent = inrFmt(netPay);
+        }
+
+        function renderSalary(list) {
+            document.getElementById('skeletonLoader').style.display = 'none';
+            const table = document.getElementById('salaryTable');
+            const empty = document.getElementById('emptyState');
+            const footer = document.getElementById('tableFooter');
+
+            if (!list.length) { table.style.display = 'none'; empty.style.display = 'block'; footer.style.display = 'none'; updateSummary([]); return; }
+            table.style.display = 'table'; empty.style.display = 'none'; footer.style.display = 'block';
+            document.getElementById('rowCount').textContent = list.length;
+            updateSummary(list);
+
+            table.querySelector('tbody').innerHTML = list.map(s => {
+                const cl = s.cl_taken || 0, med = s.medical_taken || 0, pers = s.personal_leave || 0;
+                const ded = s.deduction || 0;
+                const pfTax = (s.pf || 0) + (s.tax || 0);
+                const totalDed = ded + pfTax;
+                const gross = s.gross || 0;
+                const final_salary = s.final_salary || 0;
+                const slipId = generateSlipId(s.id, s.month);
+
+                // Deduction breakdown - compact
+                let dedHtml = '<div class="salary-breakdown">';
+                if (ded > 0) dedHtml += `<span class="salary-ded">Leave: -${inrFmt(ded)}</span>`;
+                if (s.pf > 0) dedHtml += `<span class="salary-pf">PF: -${inrFmt(s.pf)}</span>`;
+                if (s.tax > 0) dedHtml += `<span class="salary-pf">Tax: -${inrFmt(s.tax)}</span>`;
+                if (totalDed === 0) dedHtml += '<span style="color:var(--text-muted)">₹0.00</span>';
+                dedHtml += '</div>';
+
+                // Status badge
+                const pStatus = (s.payment_status || 'pending').toLowerCase();
+                let statusHtml = '';
+                if (pStatus === 'paid') statusHtml = '<span class="status-pill status-paid">✓ Paid</span>';
+                else if (pStatus === 'processing') statusHtml = '<span class="status-pill status-processing">⏳ Processing</span>';
+                else if (pStatus === 'failed') statusHtml = '<span class="status-pill status-failed">✗ Failed</span>';
+                else statusHtml = '<span class="status-pill status-pending">⏳ Pending</span>';
+
+                // Slip action
+                let slipHtml = '';
+                if (pStatus === 'paid') {
+                    slipHtml = `<button class="btn-download" onclick="downloadPDF(${s.id},'${s.name.replace(/'/g, "\\'")}')">📥 Download</button>`;
+                } else {
+                    slipHtml = '<span class="slip-unavailable">Available after payment</span>';
+                }
+
+                // Month badge
+                const monthBadge = s.month ? `<span class="month-badge">${getMonthShort(s.month)}</span>` : '<span style="color:var(--text-muted);font-size:.78rem">—</span>';
+
+                return `<tr>
+                    <td><span class="slip-id">${slipId}</span></td>
+                    <td>
+                        <div class="emp-info">
+                            <span class="emp-name">${s.name}</span>
+                            <span class="emp-id">${s.employee_id || '#' + s.id}</span>
+                            ${s.section ? `<span class="emp-qual">${s.section}</span>` : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display:flex;flex-direction:column;gap:2px">
+                            <span style="font-weight:500;color:var(--text-main);font-size:.8rem">${s.department || '—'}</span>
+                            <span style="color:var(--text-muted);font-size:.7rem">${s.role || '—'}</span>
+                        </div>
+                    </td>
+                    <td>${monthBadge}</td>
+                    <td class="text-right" style="font-weight:600">${inrFmt(gross)}</td>
+                    <td class="text-right">${dedHtml}</td>
+                    <td class="text-right"><span class="final-salary">${inrFmt(final_salary)}</span></td>
+                    <td class="text-center">${statusHtml}</td>
+                    <td>${slipHtml}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function filterSalary() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            const month = document.getElementById('monthFilter').value;
+            let filtered = allStaff;
+            if (q) filtered = filtered.filter(s =>
+                (s.name || '').toLowerCase().includes(q) ||
+                (s.department || '').toLowerCase().includes(q) ||
+                (s.role || '').toLowerCase().includes(q) ||
+                (s.employee_id || '').toLowerCase().includes(q) ||
+                (s.qualification || '').toLowerCase().includes(q) ||
+                (s.section || '').toLowerCase().includes(q)
+            );
+            if (month) filtered = filtered.filter(s => monthMatches(s.month, month));
+            renderSalary(filtered);
+        }
+
+        function downloadPDF(id, name) {
+            showToast('Downloading salary slip...', 'info');
+            fetch('/api/pdf/' + id, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Download failed');
+                return res.blob();
+            })
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `SalarySlip_${name.replace(/\s+/g, '_')}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                showToast('Salary slip downloaded!', 'success');
+            })
+            .catch(e => showToast('Download failed: ' + e.message, 'error'));
+        }
+
+        // Auto-refresh every 30 seconds
+        loadSalaryData();
+        setInterval(loadSalaryData, 30000);
+    </script>
+</body>
+
+</html>
