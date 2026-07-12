@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Assistant - PayNest Pro</title>
+    <meta name="description" content="PayNest Pro AI Assistant — Intelligent payroll queries with voice support">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <style>
@@ -45,6 +46,7 @@
         justify-content: center; cursor: pointer; transition: all 0.2s;
     }
     .ai-btn-icon:hover { background: var(--bg-hover); color: var(--primary); border-color: var(--primary); }
+    .ai-btn-icon.active { background: rgba(99,102,241,0.15); color: var(--primary); border-color: var(--primary); }
 
     .ai-messages {
         flex: 1; overflow-y: auto; padding: 1.5rem 0; display: flex;
@@ -61,7 +63,7 @@
     .ai-msg-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
     .ai-msg-bubble {
         padding: 12px 16px; border-radius: 16px; font-size: 14px; line-height: 1.6;
-        word-wrap: break-word; position: relative;
+        word-wrap: break-word; position: relative; white-space: pre-wrap; width: fit-content;
     }
     .ai-msg.bot .ai-msg-bubble {
         background: var(--bg-input); border: 1px solid var(--border); color: var(--text-main);
@@ -139,6 +141,35 @@
     .ai-messages::-webkit-scrollbar-track { background: transparent; }
     .ai-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
     .ai-messages::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+    /* Suggestions chips after bot message */
+    .ai-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .ai-suggestion-chip {
+        padding: 6px 12px; border-radius: 16px; border: 1px solid var(--border);
+        background: rgba(99,102,241,0.08); color: var(--primary); font-size: 12px;
+        cursor: pointer; transition: all 0.2s; font-weight: 500;
+    }
+    .ai-suggestion-chip:hover { background: rgba(99,102,241,0.18); border-color: var(--primary); }
+
+    /* Copy button */
+    .ai-copy-btn {
+        display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
+        border: none; background: transparent; color: var(--text-muted);
+        font-size: 11px; cursor: pointer; border-radius: 4px; transition: all 0.2s;
+    }
+    .ai-copy-btn:hover { color: var(--primary); background: rgba(99,102,241,0.1); }
+    .ai-copy-btn.copied { color: var(--success, #22c55e); }
+
+    /* Speak button */
+    .ai-speak-btn {
+        display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
+        border: none; background: transparent; color: var(--text-muted);
+        font-size: 11px; cursor: pointer; border-radius: 4px; transition: all 0.2s;
+    }
+    .ai-speak-btn:hover { color: var(--primary); background: rgba(99,102,241,0.1); }
+    .ai-speak-btn.speaking { color: var(--danger, #ef4444); }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -165,7 +196,7 @@
                 <button class="hamburger" onclick="toggleSidebar()">☰</button>
                 <div>
                     <h1>AI Assistant</h1>
-                    <p style="color:var(--text-muted);font-size:.75rem;margin-top:2px" id="subtitleText">Intelligent payroll queries</p>
+                    <p style="color:var(--text-muted);font-size:.75rem;margin-top:2px" id="subtitleText">Intelligent payroll queries • English, Hindi & Hinglish</p>
                 </div>
             </div>
             <div class="topbar-right">
@@ -180,12 +211,23 @@
                         <div class="ai-avatar-lg">🤖</div>
                         <div class="ai-header-text">
                             <h2>PayNest AI</h2>
-                            <p>Ask me about employees, payroll & more</p>
+                            <p>Powered by Gemini • Ask in English, Hindi or Hinglish</p>
                         </div>
                     </div>
                     <div class="ai-header-actions">
+                        <button class="ai-btn-icon" id="voiceToggleBtn" title="Toggle Voice Responses" onclick="toggleVoice()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" stroke="currentColor">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                            </svg>
+                        </button>
+                        <button class="ai-btn-icon" id="stopSpeakBtn" title="Stop Speaking" onclick="stopSpeaking()" style="display:none">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" stroke="currentColor">
+                                <rect x="6" y="6" width="12" height="12" rx="2"/>
+                            </svg>
+                        </button>
                         <button class="ai-btn-icon" title="Clear Chat" onclick="clearChat()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" stroke="currentColor">
                                 <polyline points="3 6 5 6 21 6"/>
                                 <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
                             </svg>
@@ -197,12 +239,14 @@
                     <div class="ai-welcome" id="welcomeScreen">
                         <div class="ai-welcome-icon">🤖</div>
                         <h3>Hello! I'm PayNest AI</h3>
-                        <p>I can help you with employee details, payroll status, salary breakdowns, and organization analytics. Just ask!</p>
+                        <p>I can help you with employee details, payroll status, salary breakdowns, and organization analytics. I understand English, Hindi, and Hinglish! Just ask.</p>
                         <div class="ai-welcome-chips">
                             <div class="ai-welcome-chip" onclick="sendQuick('Show dashboard summary')">📊 Dashboard Summary</div>
                             <div class="ai-welcome-chip" onclick="sendQuick('Show pending payroll')">⏳ Pending Payroll</div>
                             <div class="ai-welcome-chip" onclick="sendQuick('Top 5 highest salaries')">🏆 Top Salaries</div>
                             <div class="ai-welcome-chip" onclick="sendQuick('How many staff')">👥 Staff Count</div>
+                            <div class="ai-welcome-chip" onclick="sendQuick('All departments')">🏢 All Departments</div>
+                            <div class="ai-welcome-chip" onclick="sendQuick('Recent payments')">💸 Recent Payments</div>
                         </div>
                     </div>
                 </div>
@@ -211,11 +255,22 @@
                     <div class="ai-quick-actions">
                         <button class="ai-quick-btn" onclick="sendQuick('Search employee')">📄 Employee Search</button>
                         <button class="ai-quick-btn" onclick="sendQuick('Show payroll status')">💰 Payroll Status</button>
-                        <button class="ai-quick-btn" onclick="sendQuick('Show dashboard summary')">📊 Dashboard Summary</button>
-                        <button class="ai-quick-btn" onclick="sendQuick('How many staff')">👥 Staff Count</button>
+                        <button class="ai-quick-btn" onclick="sendQuick('Attendance rate')">📋 Attendance</button>
+                        <button class="ai-quick-btn" onclick="sendQuick('Leave summary')">🏖️ Leaves</button>
+                        <button class="ai-quick-btn" onclick="sendQuick('Show dashboard summary')">📊 Dashboard</button>
+                        <button class="ai-quick-btn" onclick="sendQuick('Highest salary')">🔝 Highest Salary</button>
+                        <button class="ai-quick-btn" onclick="sendQuick('Lowest salary')">🔻 Lowest Salary</button>
+                        <button class="ai-quick-btn" onclick="sendQuick('Pending payroll')">⏳ Pending Payroll</button>
+                        <button class="ai-quick-btn" onclick="sendQuick('Monthly trend')">📈 Monthly Payroll</button>
+                        <button class="ai-quick-btn" onclick="sendQuick('All departments')">🏢 Department Summary</button>
+                        <button class="ai-quick-btn" onclick="sendQuick('Section summary')">📑 Section Summary</button>
+                        <button class="ai-quick-btn" onclick="sendQuick('Recent payments')">💸 Recent Payments</button>
                     </div>
                     <div class="ai-input-row">
-                        <input type="text" class="ai-input" id="chatInput" placeholder="Ask me anything about payroll..." autocomplete="off">
+                        <input type="text" class="ai-input" id="chatInput" placeholder="Ask me anything about payroll... (English, Hindi, Hinglish)" autocomplete="off">
+                        <button class="ai-mic-btn" id="micBtn" title="Voice Input" onclick="toggleMic()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                        </button>
                         <button class="ai-send-btn" id="sendBtn" title="Send" onclick="sendMessage()">
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                         </button>
@@ -226,13 +281,16 @@
     </main>
 
 <script>
-// Authentication Check
+// ─── AUTHENTICATION CHECK ─────────────────────────────────────────────────────
 const token = localStorage.getItem('token');
 if (!token) window.location.href = '/login.html';
 
 const API_URL = '/api/ai/chat';
 let chatHistory = JSON.parse(sessionStorage.getItem('ai_chat_history') || '[]');
 let isProcessing = false;
+let voiceEnabled = localStorage.getItem('ai_voice') === 'true';
+let isRecording = false;
+let recognition = null;
 
 const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
@@ -240,18 +298,31 @@ const sendBtn = document.getElementById('sendBtn');
 const welcomeScreen = document.getElementById('welcomeScreen');
 const sidebar = document.getElementById('sidebar');
 const sidebarOverlay = document.getElementById('sidebarOverlay');
+const micBtn = document.getElementById('micBtn');
+const voiceToggleBtn = document.getElementById('voiceToggleBtn');
+const stopSpeakBtn = document.getElementById('stopSpeakBtn');
 
+// ─── INITIALIZATION ───────────────────────────────────────────────────────────
 (function init() {
+    // Update voice toggle UI
+    updateVoiceToggleUI();
+    
+    // Restore chat history
     if (chatHistory.length > 0) {
         welcomeScreen.style.display = 'none';
         chatHistory.forEach(msg => appendMessage(msg.role, msg.content, msg.timestamp, msg.responseData, true));
         scrollToBottom();
     }
+    
     chatInput.addEventListener('keydown', e => {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     });
+
+    // Initialize Speech Recognition
+    initSpeechRecognition();
 })();
 
+// ─── SIDEBAR ──────────────────────────────────────────────────────────────────
 function toggleSidebar() {
     sidebar.classList.toggle('active');
     sidebarOverlay.classList.toggle('active');
@@ -265,6 +336,7 @@ function logout() {
     window.location.href = '/login.html';
 }
 
+// ─── SEND MESSAGE ─────────────────────────────────────────────────────────────
 async function sendMessage(overrideText) {
     const text = (overrideText || chatInput.value).trim();
     if (!text || isProcessing) return;
@@ -302,6 +374,11 @@ async function sendMessage(overrideText) {
         appendMessage('bot', data.message || 'No response.', botTime, data);
         saveChatHistory('bot', data.message || 'No response.', botTime, data);
 
+        // Voice response
+        if (voiceEnabled && data.message) {
+            speakText(data.message);
+        }
+
     } catch (err) {
         removeTyping(typingEl);
         const errTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -315,6 +392,7 @@ async function sendMessage(overrideText) {
 
 function sendQuick(text) { sendMessage(text); }
 
+// ─── APPEND MESSAGE ───────────────────────────────────────────────────────────
 function appendMessage(role, content, timestamp, responseData, isRestore) {
     const msgDiv = document.createElement('div');
     msgDiv.className = `ai-msg ${role}`;
@@ -329,7 +407,27 @@ function appendMessage(role, content, timestamp, responseData, isRestore) {
         html += renderRichResponse(responseData);
     }
 
-    html += `<div class="ai-msg-meta"><span>${timestamp || ''}</span></div></div>`;
+    // Meta row with timestamp and action buttons
+    html += `<div class="ai-msg-meta">
+        <span>${timestamp || ''}</span>`;
+    
+    if (role === 'bot') {
+        html += `<button class="ai-copy-btn" onclick="copyMessage(this, '${escapeAttr(content)}')" title="Copy">📋 Copy</button>`;
+        html += `<button class="ai-speak-btn" onclick="speakFromBtn(this, '${escapeAttr(content)}')" title="Read aloud">🔊 Speak</button>`;
+    }
+    
+    html += `</div>`;
+
+    // Suggestions
+    if (role === 'bot' && responseData && responseData.suggestions && responseData.suggestions.length > 0) {
+        html += `<div class="ai-suggestions">`;
+        responseData.suggestions.forEach(s => {
+            html += `<div class="ai-suggestion-chip" onclick="sendQuick('${escapeAttr(s)}')">${escapeHtml(s)}</div>`;
+        });
+        html += `</div>`;
+    }
+
+    html += `</div>`;
 
     msgDiv.innerHTML = html;
     chatMessages.appendChild(msgDiv);
@@ -337,6 +435,7 @@ function appendMessage(role, content, timestamp, responseData, isRestore) {
     if (!isRestore) scrollToBottom();
 }
 
+// ─── RICH RESPONSE RENDERERS ──────────────────────────────────────────────────
 function renderRichResponse(data) {
     if (data.type === 'card') return renderCard(data);
     if (data.type === 'summary') return renderSummary(data);
@@ -395,6 +494,7 @@ function renderSummary(data) {
     return `<div class="ai-summary-grid">${items}</div>`;
 }
 
+// ─── TYPING INDICATOR ─────────────────────────────────────────────────────────
 function showTyping() {
     const el = document.createElement('div');
     el.className = 'ai-msg bot';
@@ -409,6 +509,7 @@ function removeTyping(el) {
     if (el && el.parentNode) el.parentNode.removeChild(el);
 }
 
+// ─── CHAT HISTORY ─────────────────────────────────────────────────────────────
 function saveChatHistory(role, content, timestamp, responseData) {
     chatHistory.push({ role, content, timestamp, responseData: responseData || null });
     if (chatHistory.length > 50) chatHistory = chatHistory.slice(-50);
@@ -422,8 +523,198 @@ function clearChat() {
     chatMessages.innerHTML = '';
     chatMessages.appendChild(welcomeScreen);
     welcomeScreen.style.display = '';
+
+    // Also clear server-side conversation memory
+    fetch('/api/ai/history', {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+    }).catch(() => {});
 }
 
+// ─── COPY MESSAGE ─────────────────────────────────────────────────────────────
+function copyMessage(btn, text) {
+    navigator.clipboard.writeText(text).then(() => {
+        btn.classList.add('copied');
+        btn.textContent = '✅ Copied';
+        setTimeout(() => {
+            btn.classList.remove('copied');
+            btn.textContent = '📋 Copy';
+        }, 2000);
+    }).catch(() => {});
+}
+
+// ─── VOICE INPUT (Speech-to-Text) ────────────────────────────────────────────
+function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        micBtn.style.display = 'none';
+        return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'hi-IN'; // Supports Hindi + English mixed
+
+    recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+        }
+        chatInput.value = transcript;
+
+        // If final result, auto-send
+        if (event.results[event.results.length - 1].isFinal) {
+            stopRecording();
+            setTimeout(() => sendMessage(), 300);
+        }
+    };
+
+    recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        stopRecording();
+    };
+
+    recognition.onend = () => {
+        stopRecording();
+    };
+}
+
+function toggleMic() {
+    if (isRecording) {
+        stopRecording();
+    } else {
+        startRecording();
+    }
+}
+
+function startRecording() {
+    if (!recognition) return;
+    try {
+        recognition.start();
+        isRecording = true;
+        micBtn.classList.add('recording');
+        chatInput.placeholder = '🎤 Listening... speak now';
+    } catch (e) {
+        console.error('Failed to start recording:', e);
+    }
+}
+
+function stopRecording() {
+    if (!recognition) return;
+    try { recognition.stop(); } catch (e) {}
+    isRecording = false;
+    micBtn.classList.remove('recording');
+    chatInput.placeholder = 'Ask me anything about payroll... (English, Hindi, Hinglish)';
+}
+
+// ─── VOICE OUTPUT (Text-to-Speech) ────────────────────────────────────────────
+function speakText(text) {
+    if (!('speechSynthesis' in window)) return;
+    
+    // Stop any current speech
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    
+    // Try to use Hindi voice if text contains Hindi characters, else English
+    const voices = window.speechSynthesis.getVoices();
+    const hindiVoice = voices.find(v => v.lang.startsWith('hi'));
+    const englishVoice = voices.find(v => v.lang.startsWith('en-IN')) || voices.find(v => v.lang.startsWith('en'));
+    
+    // Simple heuristic: if text has Devanagari, use Hindi voice
+    if (/[\u0900-\u097F]/.test(text) && hindiVoice) {
+        utterance.voice = hindiVoice;
+        utterance.lang = 'hi-IN';
+    } else if (englishVoice) {
+        utterance.voice = englishVoice;
+        utterance.lang = 'en-IN';
+    }
+    
+    utterance.onstart = () => {
+        stopSpeakBtn.style.display = 'flex';
+    };
+    utterance.onend = () => {
+        stopSpeakBtn.style.display = 'none';
+    };
+    
+    window.speechSynthesis.speak(utterance);
+}
+
+function speakFromBtn(btn, text) {
+    if (btn.classList.contains('speaking')) {
+        window.speechSynthesis.cancel();
+        btn.classList.remove('speaking');
+        btn.textContent = '🔊 Speak';
+        return;
+    }
+    
+    // Remove speaking state from all buttons
+    document.querySelectorAll('.ai-speak-btn.speaking').forEach(b => {
+        b.classList.remove('speaking');
+        b.textContent = '🔊 Speak';
+    });
+    
+    btn.classList.add('speaking');
+    btn.textContent = '⏹️ Stop';
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    
+    const voices = window.speechSynthesis.getVoices();
+    const englishVoice = voices.find(v => v.lang.startsWith('en-IN')) || voices.find(v => v.lang.startsWith('en'));
+    if (englishVoice) {
+        utterance.voice = englishVoice;
+        utterance.lang = 'en-IN';
+    }
+    
+    utterance.onend = () => {
+        btn.classList.remove('speaking');
+        btn.textContent = '🔊 Speak';
+        stopSpeakBtn.style.display = 'none';
+    };
+    
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+    stopSpeakBtn.style.display = 'flex';
+}
+
+function stopSpeaking() {
+    window.speechSynthesis.cancel();
+    stopSpeakBtn.style.display = 'none';
+    document.querySelectorAll('.ai-speak-btn.speaking').forEach(b => {
+        b.classList.remove('speaking');
+        b.textContent = '🔊 Speak';
+    });
+}
+
+function toggleVoice() {
+    voiceEnabled = !voiceEnabled;
+    localStorage.setItem('ai_voice', voiceEnabled.toString());
+    updateVoiceToggleUI();
+    if (!voiceEnabled) {
+        stopSpeaking();
+    }
+}
+
+function updateVoiceToggleUI() {
+    if (voiceEnabled) {
+        voiceToggleBtn.classList.add('active');
+        voiceToggleBtn.title = 'Voice Responses: ON (click to disable)';
+    } else {
+        voiceToggleBtn.classList.remove('active');
+        voiceToggleBtn.title = 'Voice Responses: OFF (click to enable)';
+    }
+}
+
+// Load voices (they may load async)
+if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => {};
+}
+
+// ─── UTILITIES ────────────────────────────────────────────────────────────────
 function scrollToBottom() {
     requestAnimationFrame(() => chatMessages.scrollTop = chatMessages.scrollHeight);
 }
@@ -432,6 +723,10 @@ function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+
+function escapeAttr(str) {
+    return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
 }
 </script>
 </body>

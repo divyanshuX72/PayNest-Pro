@@ -132,6 +132,24 @@ const setupDB = async () => {
         `);
         console.log('Table `activity_logs` created.');
 
+        // 6. Create ai_logs table for AI Assistant audit trail
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS ai_logs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                admin_id INT NOT NULL,
+                question TEXT NOT NULL,
+                detected_intent VARCHAR(100) DEFAULT '',
+                generated_sql TEXT DEFAULT '',
+                execution_time_ms INT DEFAULT 0,
+                response_type VARCHAR(50) DEFAULT '',
+                success BOOLEAN DEFAULT TRUE,
+                ip_address VARCHAR(100) DEFAULT '',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE
+            );
+        `);
+        console.log('Table `ai_logs` created.');
+
         // Insert default admin if none exists
         const [rows] = await connection.query('SELECT COUNT(*) as count FROM admins');
         if (rows[0].count === 0) {
