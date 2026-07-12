@@ -571,22 +571,13 @@
                 <div class="ai-status-badge">
                     <div class="dot"></div> Connected
                 </div>
-                <div class="ai-lang-switch">
-                    <select id="voiceLangSelect" style="background:transparent;border:none;color:inherit;font-size:inherit;font-family:inherit;outline:none;cursor:pointer;">
-                        <option value="en-US">English</option>
-                        <option value="hi-IN">Hindi / Hinglish</option>
-                        <option value="mr-IN">Marathi</option>
-                    </select>
-                </div>
+
             </div>
             <div class="ai-header-right">
                 <button class="header-action-btn" title="Clear Chat" onclick="clearChat()">
                     <i data-lucide="trash-2"></i>
                 </button>
-                <button class="header-action-btn" id="voiceToggleBtn" title="Voice Toggle" onclick="toggleVoice()">
-                    <i data-lucide="volume-2"></i>
-                </button>
-                <button class="header-action-btn" title="Settings">
+                <button class="header-action-btn" title="Settings" onclick="openSettings()">
                     <i data-lucide="settings"></i>
                 </button>
                 <div class="user-profile">AD</div>
@@ -663,6 +654,42 @@
         </div>
     </main>
 
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>Chat Settings</h2>
+                <span class="close" onclick="closeSettings()">&times;</span>
+            </div>
+            <div class="modal-body" style="display:flex; flex-direction:column; gap:16px;">
+                <div class="form-group" style="display:flex; justify-content:space-between; align-items:center;">
+                    <label style="margin:0;">Auto-Speak Responses</label>
+                    <button class="header-action-btn" id="voiceToggleBtn" title="Voice Toggle" onclick="toggleVoice()" style="margin:0;">
+                        <i data-lucide="volume-2"></i>
+                    </button>
+                </div>
+                <div class="form-group">
+                    <label>Language</label>
+                    <select id="voiceLangSelect" class="form-control">
+                        <option value="en-US">English</option>
+                        <option value="hi-IN">Hindi / Hinglish</option>
+                        <option value="mr-IN">Marathi</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>TTS Voice</label>
+                    <select id="ttsVoiceSelect" class="form-control">
+                        <option value="female">👩 Woman</option>
+                        <option value="male">👨 Man</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeSettings()" style="width: 100%;">Done</button>
+            </div>
+        </div>
+    </div>
+
     <script>
     // Initialize Lucide Icons
     lucide.createIcons();
@@ -731,6 +758,14 @@
     function logout() {
         localStorage.removeItem('token');
         window.location.href = '/login.html';
+    }
+
+    function openSettings() {
+        document.getElementById('settingsModal').style.display = 'block';
+    }
+
+    function closeSettings() {
+        document.getElementById('settingsModal').style.display = 'none';
     }
 
     // ─── SEND MESSAGE ─────────────────────────────────────────────────────────────
@@ -1028,17 +1063,42 @@
         lucide.createIcons({ root: voiceToggleBtn });
     }
 
+    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+
+    function getSelectedVoice(lang, type) {
+        const voices = window.speechSynthesis.getVoices();
+        let targetVoices = voices.filter(v => v.lang.startsWith(lang.split('-')[0]));
+        if (targetVoices.length === 0) targetVoices = voices;
+        
+        const searchFemale = ['female', 'woman', 'zira', 'hazel', 'samantha', 'victoria', 'karen'];
+        const searchMale = ['male', 'man', 'david', 'mark', 'daniel', 'alex', 'rishi'];
+        const keywords = type === 'female' ? searchFemale : searchMale;
+        
+        for (let v of targetVoices) {
+            const nameLower = v.name.toLowerCase();
+            if (keywords.some(k => nameLower.includes(k))) return v;
+        }
+        return targetVoices[0]; // fallback if specific gender not found
+    }
+
     function speakText(text) {
         if (!('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
+        
+        const langSelect = document.getElementById('voiceLangSelect');
+        const voiceTypeSelect = document.getElementById('ttsVoiceSelect');
+        if (langSelect && voiceTypeSelect) {
+             utterance.lang = langSelect.value;
+             const selectedVoice = getSelectedVoice(langSelect.value, voiceTypeSelect.value);
+             if (selectedVoice) utterance.voice = selectedVoice;
+        }
+        
         window.speechSynthesis.speak(utterance);
     }
     
     function speakFromBtn(btn, text) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        window.speechSynthesis.speak(utterance);
+        speakText(text);
     }
     </script>
 </body>
